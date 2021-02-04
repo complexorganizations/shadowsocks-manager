@@ -190,7 +190,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     function shadowsocks-encryption() {
         echo "Choose your Encryption"
         echo "   1) aes-256-gcm (Recommended)"
-        echo "   2) aes-256-ctr"
+        echo "   2) aes-128-gcm"
         echo "   3) chacha20-ietf-poly1305"
         until [[ "$ENCRYPTION_CHOICE_SETTINGS" =~ ^[1-3]$ ]]; do
             read -rp "Encryption choice [1-3]: " -e -i 1 ENCRYPTION_CHOICE_SETTINGS
@@ -200,7 +200,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             ENCRYPTION_CHOICE="aes-256-gcm"
             ;;
         2)
-            ENCRYPTION_CHOICE="aes-256-ctr"
+            ENCRYPTION_CHOICE="aes-128-gcm"
             ;;
         3)
             ENCRYPTION_CHOICE="chacha20-ietf-poly1305"
