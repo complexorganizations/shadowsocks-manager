@@ -130,7 +130,10 @@ function headless-install() {
 # No GUI
 headless-install
 
-if [ ! -f "/var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json" ]; then
+SHADOWSOCK_CONFIG_PATH="/var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json"
+SHADOWOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
+
+if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
 
     # Question 1: Determine host port
     function set-port() {
@@ -323,21 +326,21 @@ if [ ! -f "/var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json"
         case $DISABLE_HOST_SETTINGS in
         1)
             DISABLE_HOST="$(
-                echo "net.ipv4.ip_forward=1" >>/etc/sysctl.d/shadowsocks.conf
-                echo "net.ipv6.conf.all.forwarding=1" >>/etc/sysctl.d/shadowsocks.conf
+                echo "net.ipv4.ip_forward=1" >>SHADOWOCKS_IP_FORWARDING_PATH
+                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWOCKS_IP_FORWARDING_PATH
                 sysctl -p
             )"
             ;;
         2)
             DISABLE_HOST="$(
-                echo "net.ipv6.conf.all.forwarding=1" >>/etc/sysctl.d/shadowsocks.conf
+                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWOCKS_IP_FORWARDING_PATH
                 sysctl -p
             )"
             ;;
         3)
             # shellcheck disable=SC2034
             DISABLE_HOST="$(
-                echo "net.ipv4.ip_forward=1" >>/etc/sysctl.d/shadowsocks.conf
+                echo "net.ipv4.ip_forward=1" >>SHADOWOCKS_IP_FORWARDING_PATH
                 sysctl -p
             )"
             ;;
