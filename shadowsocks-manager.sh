@@ -420,35 +420,18 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        # Installation begins here
-        if [ "$DISTRO" == "ubuntu" ]; then
+    if [ ! -x "$(command -v ss)" ]; }; then
+        if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
             apt-get update
             apt-get install snapd haveged qrencode -y
             snap install core shadowsocks-libev
-        elif [ "$DISTRO" == "debian" ]; then
-            apt-get update
-            apt-get install snapd haveged qrencode -y
-            snap install core shadowsocks-libev
-        elif [ "$DISTRO" == "raspbian" ]; then
-            apt-get update
-            apt-get install snapd haveged qrencode -y
-            snap install core shadowsocks-libev
-        elif [ "$DISTRO" == "centos" ]; then
-            dnf upgrade -y
-            dnf install epel-release -y
-            yum install snapd haveged -y
-            snap install core shadowsocks-libev
-        elif [ "$DISTRO" == "fedora" ]; then
-            dnf upgrade -y
-            dnf install epel-release -y
-            yum install snapd haveged -y
-            snap install core shadowsocks-libev
-        elif [ "$DISTRO" == "rhel" ]; then
+        elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
             dnf upgrade -y
             dnf install epel-release -y
             yum install snapd haveged -y
             snap install core shadowsocks-libev
         fi
+    fi
     }
 
     # Install shadowsocks Server
@@ -524,13 +507,7 @@ else
             ;;
         4)
             snap stop shadowsocks-libev.ss-server &
-            if [ "$DISTRO" == "ubuntu" ]; then
-                snap remove --purge shadowsocks-libev -y
-                apt-get remove --purge snapd haveged -y
-            elif [ "$DISTRO" == "debian" ]; then
-                snap remove --purge shadowsocks-libev -y
-                apt-get remove --purge snapd haveged -y
-            elif [ "$DISTRO" == "raspbian" ]; then
+            if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
                 snap remove --purge shadowsocks-libev -y
                 apt-get remove --purge snapd haveged -y
             elif [ "$DISTRO" == "centos" ]; then
