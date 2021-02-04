@@ -174,7 +174,6 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         done
         case $PASSWORD_CHOICE_SETTINGS in
         1)
-            # shellcheck disable=SC2154
             PASSWORD_CHOICE="$(openssl rand -base64 25)"
             ;;
         2)
@@ -325,24 +324,17 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         done
         case $DISABLE_HOST_SETTINGS in
         1)
-            DISABLE_HOST="$(
                 echo "net.ipv4.ip_forward=1" >>SHADOWOCKS_IP_FORWARDING_PATH
                 echo "net.ipv6.conf.all.forwarding=1" >>SHADOWOCKS_IP_FORWARDING_PATH
                 sysctl -p
-            )"
             ;;
         2)
-            DISABLE_HOST="$(
                 echo "net.ipv6.conf.all.forwarding=1" >>SHADOWOCKS_IP_FORWARDING_PATH
                 sysctl -p
-            )"
             ;;
         3)
-            # shellcheck disable=SC2034
-            DISABLE_HOST="$(
                 echo "net.ipv4.ip_forward=1" >>SHADOWOCKS_IP_FORWARDING_PATH
                 sysctl -p
-            )"
             ;;
         esac
     }
@@ -404,7 +396,6 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     function install-bbr() {
         if [ "$INSTALL_BBR" == "" ]; then
-            # shellcheck disable=SC2034
             read -rp "Do You Want To Install TCP bbr (y/n): " -e -i y INSTALL_BBR
         fi
         if [ "$INSTALL_BBR" = "y" ]; then
@@ -466,21 +457,15 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     function v2ray-install() {
         CHECK_ARCHITECTURE=$(dpkg --print-architecture)
-        # shellcheck disable=SC2086
         FILE_NAME=$(v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz)
-        # shellcheck disable=SC2086
         curl https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/$FILE_NAME --create-dirs -o /etc/shadowsocks-libev/$FILE_NAME
-        # shellcheck disable=SC2086
         tar xvzf /etc/shadowsocks-libev/$FILE_NAME
-        # shellcheck disable=SC2086
         rm -f /etc/shadowsocks-libev/$FILE_NAME
     }
 
     function shadowsocks-configuration() {
-        # shellcheck disable=SC2016
         mkdir /var/snap/shadowsocks-libev/common/etc
         mkdir /var/snap/shadowsocks-libev/common/etc/shadowsocks-libev
-        # shellcheck disable=SC1078,SC1079
         echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
   ""\"mode""\":""\"$MODE_CHOICE""\",
