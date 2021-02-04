@@ -130,7 +130,8 @@ function headless-install() {
 headless-install
 
 SHADOWSOCK_CONFIG_PATH="/var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json"
-SHADOWOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
+SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
+SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 
 if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
 
@@ -323,16 +324,16 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         done
         case $DISABLE_HOST_SETTINGS in
         1)
-                echo "net.ipv4.ip_forward=1" >>SHADOWOCKS_IP_FORWARDING_PATH
-                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWOCKS_IP_FORWARDING_PATH
+                echo "net.ipv4.ip_forward=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
+                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
                 sysctl -p
             ;;
         2)
-                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWOCKS_IP_FORWARDING_PATH
+                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
                 sysctl -p
             ;;
         3)
-                echo "net.ipv4.ip_forward=1" >>SHADOWOCKS_IP_FORWARDING_PATH
+                echo "net.ipv4.ip_forward=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
                 sysctl -p
             ;;
         esac
@@ -520,7 +521,7 @@ else
                 snap remove --purge shadowsocks-libev -y
                 yum remove snapd -y
             fi
-            rm -f /var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json
+            rm -f $SHADOWSOCK_CONFIG_PATH
             sed -i 's/\* soft nofile 51200//d' /etc/security/limits.conf
             sed -i 's/\* hard nofile 51200//d' /etc/security/limits.conf
             sed -i 's/\tcp_bbr//d' /etc/modules-load.d/modules.conf
@@ -539,8 +540,11 @@ else
             fi
             ;;
         6) # Update the script
-            curl -o /var/snap/shadowsocks-libev/shadowsocks-server.sh https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh
-            chmod +x /var/snap/shadowsocks-libev/shadowsocks-server.sh || exit
+        CURRENT_FILE_PATH="$(realpath "$0")"
+        if [ -f "$CURRENT_FILE_PATH" ]; then
+            curl -o $CURRENT_FILE_PATH $SHADOWSOCKS_MANAGER_URL
+            chmod +x $CURRENT_FILE_PATH || exit
+        fi
             ;;
         esac
     }
