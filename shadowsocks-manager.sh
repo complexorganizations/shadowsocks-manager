@@ -129,7 +129,8 @@ function headless-install() {
 # No GUI
 headless-install
 
-SHADOWSOCK_CONFIG_PATH="/var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json"
+SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
+SHADOWSOCK_CONFIG_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/config.json"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 
@@ -468,7 +469,6 @@ net.ipv4.tcp_congestion_control = hybla' \
     shadowsocks-configuration
 
     function show-config() {
-        clear
         qrencode -t ansiutf8 -l L </var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json
         echo "Config File ---> /var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json"
         echo "Shadowsocks Server IP: $SERVER_HOST"
@@ -521,12 +521,12 @@ else
                 snap remove --purge shadowsocks-libev -y
                 yum remove snapd -y
             fi
+            rm -rf $SHADOWSOCK_PATH
             rm -f $SHADOWSOCK_CONFIG_PATH
             sed -i 's/\* soft nofile 51200//d' /etc/security/limits.conf
             sed -i 's/\* hard nofile 51200//d' /etc/security/limits.conf
             sed -i 's/\tcp_bbr//d' /etc/modules-load.d/modules.conf
             rm -f /etc/sysctl.d/shadowsocks.conf
-            rm -rf /var/snap/shadowsocks-libev
             ;;
         5)
             if pgrep systemd-journal; then
