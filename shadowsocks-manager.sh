@@ -441,10 +441,10 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     function v2ray-install() {
         CHECK_ARCHITECTURE=$(dpkg --print-architecture)
-        FILE_NAME=$(v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz)
-        curl https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/$FILE_NAME --create-dirs -o /etc/shadowsocks-libev/$FILE_NAME
-        tar xvzf /etc/shadowsocks-libev/$FILE_NAME
-        rm -f /etc/shadowsocks-libev/$FILE_NAME
+        FILE_NAME=$(v2ray-plugin-linux-"$CHECK_ARCHITECTURE"-v1.3.1.tar.gz)
+        curl https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/"$FILE_NAME" --create-dirs -o /etc/shadowsocks-libev/"$FILE_NAME"
+        tar xvzf /etc/shadowsocks-libev/"$FILE_NAME"
+        rm -f /etc/shadowsocks-libev/"$FILE_NAME"
     }
 
     function shadowsocks-configuration() {
@@ -542,8 +542,8 @@ else
         6) # Update the script
         CURRENT_FILE_PATH="$(realpath "$0")"
         if [ -f "$CURRENT_FILE_PATH" ]; then
-            curl -o $CURRENT_FILE_PATH $SHADOWSOCKS_MANAGER_URL
-            chmod +x $CURRENT_FILE_PATH || exit
+            curl -o "$CURRENT_FILE_PATH" $SHADOWSOCKS_MANAGER_URL
+            chmod +x "$CURRENT_FILE_PATH" || exit
         fi
             ;;
         esac
