@@ -402,23 +402,24 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     function install-bbr() {
         if [ "$INSTALL_BBR" == "" ]; then
-          read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
-          if [[ $REPLY =~ ^[Yy]$ ]]; then
-            # Run the systemctl install command
-            sysctl-install
-            # Check if tcp brr can be installed and if yes than install
-            KERNEL_VERSION_LIMIT=4.1
-            KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
-            if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
-            if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
-                modprobe tcp_bbr
-                echo "tcp_bbr" >>/etc/modules-load.d/modules.conf
-                echo "net.core.default_qdisc=fq" >>/etc/sysctl.d/shadowsocks.conf
-                echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.d/shadowsocks.conf
-                sysctl -p
-            fi
-            else
-                echo "Error: Please update your kernel to 4.1 or higher" >&2
+            read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                # Run the systemctl install command
+                sysctl-install
+                # Check if tcp brr can be installed and if yes than install
+                KERNEL_VERSION_LIMIT=4.1
+                KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
+                if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
+                    if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
+                        modprobe tcp_bbr
+                        echo "tcp_bbr" >>/etc/modules-load.d/modules.conf
+                        echo "net.core.default_qdisc=fq" >>/etc/sysctl.d/shadowsocks.conf
+                        echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.d/shadowsocks.conf
+                        sysctl -p
+                    fi
+                else
+                    echo "Error: Please update your kernel to 4.1 or higher" >&2
+                fi
             fi
         fi
     }
