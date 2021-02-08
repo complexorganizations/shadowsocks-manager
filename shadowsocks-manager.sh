@@ -3,10 +3,10 @@
 
 # Require script to be run as root
 function super-user-check() {
-  if [ "$EUID" -ne 0 ]; then
-    echo "You need to run this script as super user."
-    exit
-  fi
+    if [ "$EUID" -ne 0 ]; then
+        echo "You need to run this script as super user."
+        exit
+    fi
 }
 
 # Check for root
@@ -14,11 +14,11 @@ super-user-check
 
 # Detect Operating System
 function dist-check() {
-  if [ -e /etc/os-release ]; then
-    # shellcheck disable=SC1091
-    source /etc/os-release
-    DISTRO=$ID
-  fi
+    if [ -e /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        source /etc/os-release
+        DISTRO=$ID
+    fi
 }
 
 # Check Operating System
@@ -26,29 +26,28 @@ dist-check
 
 # Pre-Checks system requirements
 function installing-system-requirements() {
-  if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
-    if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v iptables)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ]; }; then
-      if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ]; }; then
-        apt-get update && apt-get install iptables curl coreutils bc jq sed e2fsprogs zip unzip grep gawk iproute2 hostname systemd -y
-      elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
-        yum update -y && yum install epel-release iptables curl coreutils bc jq sed e2fsprogs zip unzip grep gawk iproute2 hostname systemd -y
-      elif { [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ]; }; then
-        pacman -Syu --noconfirm iptables curl bc jq sed zip unzip grep gawk iproute2 hostname systemd
-      elif [ "$DISTRO" == "alpine" ]; then
-        apk update && apk add iptables curl bc jq sed zip unzip grep gawk iproute2 hostname systemd
-      elif [ "$DISTRO" == "freebsd" ]; then
-        pkg update && pkg install curl jq zip unzip gawk
-      fi
+    if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
+        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v iptables)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ]; }; then
+            if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ]; }; then
+                apt-get update && apt-get install iptables curl coreutils bc jq sed e2fsprogs zip unzip grep gawk iproute2 hostname systemd -y
+            elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
+                yum update -y && yum install epel-release iptables curl coreutils bc jq sed e2fsprogs zip unzip grep gawk iproute2 hostname systemd -y
+            elif { [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ]; }; then
+                pacman -Syu --noconfirm iptables curl bc jq sed zip unzip grep gawk iproute2 hostname systemd
+            elif [ "$DISTRO" == "alpine" ]; then
+                apk update && apk add iptables curl bc jq sed zip unzip grep gawk iproute2 hostname systemd
+            elif [ "$DISTRO" == "freebsd" ]; then
+                pkg update && pkg install curl jq zip unzip gawk
+            fi
+        fi
+    else
+        echo "Error: $DISTRO not supported."
+        exit
     fi
-  else
-    echo "Error: $DISTRO not supported."
-    exit
-  fi
 }
 
 # Run the function and check for requirements
 installing-system-requirements
-
 
 function usage-guide() {
     echo "usage: ./$(basename "$0") <command>"
@@ -325,17 +324,23 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         done
         case $DISABLE_HOST_SETTINGS in
         1)
-                echo "net.ipv4.ip_forward=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
-                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p
+            if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
+                echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+            fi
             ;;
         2)
-                echo "net.ipv6.conf.all.forwarding=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p
+            if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
+                echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+            fi
             ;;
         3)
-                echo "net.ipv4.ip_forward=1" >>SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p
+            if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
+                echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+            fi
             ;;
         esac
     }
@@ -422,18 +427,18 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-    if [ ! -x "$(command -v ss)" ]; then
-        if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
-            apt-get update
-            apt-get install snapd haveged qrencode -y
-            snap install core shadowsocks-libev
-        elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
-            dnf upgrade -y
-            dnf install epel-release -y
-            yum install snapd haveged -y
-            snap install core shadowsocks-libev
+        if [ ! -x "$(command -v ss)" ]; then
+            if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
+                apt-get update
+                apt-get install snapd haveged qrencode -y
+                snap install core shadowsocks-libev
+            elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
+                dnf upgrade -y
+                dnf install epel-release -y
+                yum install snapd haveged -y
+                snap install core shadowsocks-libev
+            fi
         fi
-    fi
     }
 
     # Install shadowsocks Server
@@ -540,11 +545,11 @@ else
             fi
             ;;
         6) # Update the script
-        CURRENT_FILE_PATH="$(realpath "$0")"
-        if [ -f "$CURRENT_FILE_PATH" ]; then
-            curl -o "$CURRENT_FILE_PATH" $SHADOWSOCKS_MANAGER_URL
-            chmod +x "$CURRENT_FILE_PATH" || exit
-        fi
+            CURRENT_FILE_PATH="$(realpath "$0")"
+            if [ -f "$CURRENT_FILE_PATH" ]; then
+                curl -o "$CURRENT_FILE_PATH" $SHADOWSOCKS_MANAGER_URL
+                chmod +x "$CURRENT_FILE_PATH" || exit
+            fi
             ;;
         esac
     }
