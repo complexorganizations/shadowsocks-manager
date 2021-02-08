@@ -132,6 +132,9 @@ SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
 SHADOWSOCK_CONFIG_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/config.json"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
+CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
+FILE_NAME="$(v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz)"
+V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/$FILE_NAME)"
 
 if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
 
@@ -396,7 +399,7 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-        >>/etc/sysctl.d/shadowsocks.conf
+        >>$SHADOWSOCKS_IP_FORWARDING_PATH
         sysctl -p
     }
 
@@ -413,8 +416,8 @@ net.ipv4.tcp_congestion_control = hybla' \
                     if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
                         modprobe tcp_bbr
                         echo "tcp_bbr" >>/etc/modules-load.d/modules.conf
-                        echo "net.core.default_qdisc=fq" >>/etc/sysctl.d/shadowsocks.conf
-                        echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.d/shadowsocks.conf
+                        echo "net.core.default_qdisc=fq" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                        echo "net.ipv4.tcp_congestion_control=bbr" >>$SHADOWSOCKS_IP_FORWARDING_PATH
                         sysctl -p
                     fi
                 else
@@ -445,14 +448,6 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     install-shadowsocks-server
-
-    function v2ray-install() {
-        CHECK_ARCHITECTURE=$(dpkg --print-architecture)
-        FILE_NAME=$(v2ray-plugin-linux-"$CHECK_ARCHITECTURE"-v1.3.1.tar.gz)
-        curl https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/"$FILE_NAME" --create-dirs -o /etc/shadowsocks-libev/"$FILE_NAME"
-        tar xvzf /etc/shadowsocks-libev/"$FILE_NAME"
-        rm -f /etc/shadowsocks-libev/"$FILE_NAME"
-    }
 
     function shadowsocks-configuration() {
         mkdir /var/snap/shadowsocks-libev/common/etc
