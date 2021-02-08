@@ -133,8 +133,8 @@ SHADOWSOCK_CONFIG_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/config.jso
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
-FILE_NAME="$(v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz)"
-V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/$FILE_NAME)"
+V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz)"
+V2RAY_PLUGIN_PATH="$SHADOWSOCK_PATH/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz"
 
 if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
 
@@ -147,8 +147,6 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         until [[ "$PORT_CHOICE_SETTINGS" =~ ^[1-3]$ ]]; do
             read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE_SETTINGS
         done
-
-        # Apply port response
         case $PORT_CHOICE_SETTINGS in
         1)
             SERVER_PORT="80"
@@ -274,7 +272,6 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         until [[ "$SERVER_HOST_V6_SETTINGS" =~ ^[1-3]$ ]]; do
             read -rp "ipv6 choice [1-3]: " -e -i 1 SERVER_HOST_V6_SETTINGS
         done
-        # Apply port response
         case $SERVER_HOST_V6_SETTINGS in
         1)
             SERVER_HOST_V6="$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
@@ -360,8 +357,6 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         until [[ "$MODE_CHOICE_SETTINGS" =~ ^[1-3]$ ]]; do
             read -rp "Mode choice [1-3]: " -e -i 1 MODE_CHOICE_SETTINGS
         done
-
-        # Apply port response
         case $MODE_CHOICE_SETTINGS in
         1)
             MODE_CHOICE="tcp_and_udp"
@@ -460,7 +455,7 @@ net.ipv4.tcp_congestion_control = hybla' \
   ""\"password""\":""\"$PASSWORD_CHOICE""\",
   ""\"timeout""\":""\"$TIMEOUT_CHOICE""\",
   ""\"method""\":""\"$ENCRYPTION_CHOICE""\"
-  }" >>/var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json
+  }" >>$SHADOWSOCK_CONFIG_PATH
         if pgrep systemd-journal; then
             snap run shadowsocks-libev.ss-server &
         else
@@ -471,9 +466,17 @@ net.ipv4.tcp_congestion_control = hybla' \
     # Shadowsocks Config
     shadowsocks-configuration
 
+    function v2ray-installer() {
+        curl $V2RAY_DOWNLOAD --create-dirs -o $V2RAY_PLUGIN_PATH
+        tar xvzf $V2RAY_PLUGIN_PATH
+        rm -f $V2RAY_PLUGIN_PATH
+    }
+
+    v2ray-installer
+
     function show-config() {
-        qrencode -t ansiutf8 -l L </var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json
-        echo "Config File ---> /var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json"
+        qrencode -t ansiutf8 -l L <"$SHADOWSOCK_CONFIG_PATH"
+        echo "Config File ---> $SHADOWSOCK_CONFIG_PATH"
         echo "Shadowsocks Server IP: $SERVER_HOST"
         echo "Shadowsocks Server Port: $SERVER_PORT"
         echo "Shadowsocks Server Password: $PASSWORD_CHOICE"
@@ -511,7 +514,7 @@ else
             snap restart shadowsocks-libev.ss-server &
             ;;
         4)
-            qrencode -t ansiutf8 -l L </var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json
+            qrencode -t ansiutf8 -l L <$SHADOWSOCK_CONFIG_PATH
             ;;
         5)
             snap stop shadowsocks-libev.ss-server &
