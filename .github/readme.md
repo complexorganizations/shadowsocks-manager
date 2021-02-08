@@ -1,6 +1,6 @@
 ### Shadowsocks Manager
 
-If the wireguard is blocked, the alternative.
+If wireguard is blocked, the alternative.
 
 ---
 ### Features
