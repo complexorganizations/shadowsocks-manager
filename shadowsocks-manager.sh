@@ -457,6 +457,7 @@ net.ipv4.tcp_congestion_control = hybla' \
     function shadowsocks-configuration() {
         mkdir /var/snap/shadowsocks-libev/common/etc
         mkdir /var/snap/shadowsocks-libev/common/etc/shadowsocks-libev
+        # shellcheck disable=SC1078,SC1079
         echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
   ""\"mode""\":""\"$MODE_CHOICE""\",
