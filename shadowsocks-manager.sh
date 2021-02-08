@@ -133,7 +133,7 @@ SHADOWSOCK_CONFIG_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/config.jso
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
-V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz)"
+V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-"$CHECK_ARCHITECTURE"-v1.3.1.tar.gz)"
 V2RAY_PLUGIN_PATH="$SHADOWSOCK_PATH/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz"
 
 if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
@@ -467,9 +467,9 @@ net.ipv4.tcp_congestion_control = hybla' \
     shadowsocks-configuration
 
     function v2ray-installer() {
-        curl $V2RAY_DOWNLOAD --create-dirs -o $V2RAY_PLUGIN_PATH
-        tar xvzf $V2RAY_PLUGIN_PATH
-        rm -f $V2RAY_PLUGIN_PATH
+        curl "$V2RAY_DOWNLOAD" --create-dirs -o "$V2RAY_PLUGIN_PATH"
+        tar xvzf "$V2RAY_PLUGIN_PATH"
+        rm -f "$V2RAY_PLUGIN_PATH"
     }
 
     v2ray-installer
