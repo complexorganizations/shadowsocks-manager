@@ -22,35 +22,22 @@ bash /usr/local/bin/shadowsocks-manager.sh
 ### Features
 - Install Shadowsocks
 - Uninstall Shadowsocks
-- V2Ray Plugin
-- 
+- V2Ray Plugin ***Coming soon***
 
 ---
 ### Q&A
 
-How
-- 
-- 
-- 
-- 
+Why use shadowsocks?
+- If your in a enviroment where wireguard is blocked than, shadowsocks is completely obfuscated, so stuff like DPI, wont work against shadowsocks. 
 
-Which
-- 
-- 
-- 
--
+Why use V2Ray? 
+- It obfuscates all proxy traffic, making it look like http, https traffic.
 
-Is
-- 
-- 
-- 
--
+Is shadowsocks safe?
+- Yes, all the code is completely open source.
 
-How 
-- 
-- 
-- 
--
+How does shadowsocks traffic look like?
+- It looks like normal http & https traffic.
 
 ---
 ### Author
@@ -60,12 +47,10 @@ How
 
 ---	
 ### Credits
-
 Open Source Community
 
 ---
 ### License
-
 Copyright © [Prajwal](https://github.com/prajwal-koirala)
 
 This project is unlicensed.
