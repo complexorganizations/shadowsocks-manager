@@ -498,11 +498,12 @@ else
         echo "   1) Start ShadowSocks"
         echo "   2) Stop ShadowSocks"
         echo "   3) Restart ShadowSocks"
-        echo "   4) Uninstall ShadowSocks"
-        echo "   5) Reinstall ShadowSocks"
-        echo "   6) Update this script"
-        until [[ "$SHADOWSOCKS_OPTIONS" =~ ^[1-6]$ ]]; do
-            read -rp "Select an Option [1-6]: " -e -i 1 SHADOWSOCKS_OPTIONS
+        echo "   4) Show QR Code"
+        echo "   5) Uninstall ShadowSocks"
+        echo "   6) Reinstall ShadowSocks"
+        echo "   7) Update this script"
+        until [[ "$SHADOWSOCKS_OPTIONS" =~ ^[1-7]$ ]]; do
+            read -rp "Select an Option [1-7]: " -e -i 1 SHADOWSOCKS_OPTIONS
         done
         case $SHADOWSOCKS_OPTIONS in
         1)
@@ -515,6 +516,9 @@ else
             snap restart shadowsocks-libev.ss-server &
             ;;
         4)
+            qrencode -t ansiutf8 -l L </var/snap/shadowsocks-libev/common/etc/shadowsocks-libev/config.json
+            ;;
+        5)
             snap stop shadowsocks-libev.ss-server &
             if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
                 snap remove --purge shadowsocks-libev -y
@@ -531,12 +535,12 @@ else
             fi
             rm -rf $SHADOWSOCK_PATH
             rm -f $SHADOWSOCK_CONFIG_PATH
+            rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
             sed -i 's/\* soft nofile 51200//d' /etc/security/limits.conf
             sed -i 's/\* hard nofile 51200//d' /etc/security/limits.conf
             sed -i 's/\tcp_bbr//d' /etc/modules-load.d/modules.conf
-            rm -f /etc/sysctl.d/shadowsocks.conf
             ;;
-        5)
+        6)
             if pgrep systemd-journal; then
                 dpkg-reconfigure shadowsocks-libev
                 modprobe shadowsocks-libev
@@ -547,7 +551,7 @@ else
                 service shadowsocks-libev restart
             fi
             ;;
-        6) # Update the script
+        7) # Update the script
             CURRENT_FILE_PATH="$(realpath "$0")"
             if [ -f "$CURRENT_FILE_PATH" ]; then
                 curl -o "$CURRENT_FILE_PATH" $SHADOWSOCKS_MANAGER_URL
