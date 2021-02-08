@@ -422,7 +422,7 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-    if [ ! -x "$(command -v ss)" ]; }; then
+    if [ ! -x "$(command -v ss)" ]; then
         if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
             apt-get update
             apt-get install snapd haveged qrencode -y
