@@ -476,6 +476,7 @@ net.ipv4.tcp_congestion_control = hybla' \
                 fi
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;host=$DOMAIN_NAME"
+                V2RAY_COMPLETED="y"
             fi
         fi
     }
@@ -483,7 +484,7 @@ net.ipv4.tcp_congestion_control = hybla' \
     # v2ray-installer
 
     function shadowsocks-configuration() {
-        if [ "$v2RAY_PLUGIN" == "y" ]; then
+        if [ "$V2RAY_COMPLETED" == "y" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
