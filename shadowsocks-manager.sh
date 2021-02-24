@@ -154,9 +154,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             until [[ "$SERVER_PORT" =~ ^[0-9]+$ ]] && [ "$SERVER_PORT" -ge 1 ] && [ "$SERVER_PORT" -le 65535 ]; do
                 read -rp "Custom port [1-65535]: " -e -i 80 SERVER_PORT
             done
-        if [ -z "$SERVER_PORT" ]; then
-          SERVER_PORT="80"
-        fi
+            if [ -z "$SERVER_PORT" ]; then
+                SERVER_PORT="80"
+            fi
             ;;
         esac
     }
@@ -178,9 +178,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             ;;
         2)
             PASSWORD_CHOICE="read -rp "Password " -e PASSWORD_CHOICE"
-        if [ -z "$PASSWORD_CHOICE" ]; then
-          PASSWORD_CHOICE="$(openssl rand -base64 25)"
-        fi
+            if [ -z "$PASSWORD_CHOICE" ]; then
+                PASSWORD_CHOICE="$(openssl rand -base64 25)"
+            fi
             ;;
         esac
     }
@@ -301,24 +301,24 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         done
         case $SERVER_HOST_SETTINGS in
         1)
-        if [ -n "$SERVER_HOST_V4" ]; then
-          SERVER_HOST="$SERVER_HOST_V4"
-        else
-          SERVER_HOST="[$SERVER_HOST_V6]"
-        fi
+            if [ -n "$SERVER_HOST_V4" ]; then
+                SERVER_HOST="$SERVER_HOST_V4"
+            else
+                SERVER_HOST="[$SERVER_HOST_V6]"
+            fi
             ;;
         2)
-        if [ -n "$SERVER_HOST_V6" ]; then
-          SERVER_HOST="[$SERVER_HOST_V6]"
-        else
-          SERVER_HOST="$SERVER_HOST_V4"
-        fi
-        ;;
+            if [ -n "$SERVER_HOST_V6" ]; then
+                SERVER_HOST="[$SERVER_HOST_V6]"
+            else
+                SERVER_HOST="$SERVER_HOST_V4"
+            fi
+            ;;
         3)
             read -rp "Custom Domain: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.hostname')" SERVER_HOST
-         if [ -z "$SERVER_HOST" ]; then
-          SERVER_HOST="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
-        fi
+            if [ -z "$SERVER_HOST" ]; then
+                SERVER_HOST="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+            fi
             ;;
         esac
     }
@@ -400,29 +400,29 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     shadowsocks-mode
 
     function choose-plugin() {
-    if [ "$MODE_CHOICE" == "tcp_only" ]; then
-        echo "Would you like to install a plugin?"
-        echo "   1) No (Recommended)"
-        echo "   2) V2Ray (Advanced)"
-        until [[ "$PLUGIN_CHOICE_SETTINGS" =~ ^[1-2]$ ]]; do
-            read -rp "Plugin choice [1-2]: " -e -i 1 PLUGIN_CHOICE_SETTINGS
-        done
-        case $PLUGIN_CHOICE_SETTINGS in
-        1)
-            PLUGIN_CHOICE="$(echo "Easy Mode")"
-            ;;
-        2)
-            v2RAY_PLUGIN="y"
-            ;;
-        esac
-     fi
+        if [ "$MODE_CHOICE" == "tcp_only" ]; then
+            echo "Would you like to install a plugin?"
+            echo "   1) No (Recommended)"
+            echo "   2) V2Ray (Advanced)"
+            until [[ "$PLUGIN_CHOICE_SETTINGS" =~ ^[1-2]$ ]]; do
+                read -rp "Plugin choice [1-2]: " -e -i 1 PLUGIN_CHOICE_SETTINGS
+            done
+            case $PLUGIN_CHOICE_SETTINGS in
+            1)
+                PLUGIN_CHOICE="$(echo "Easy Mode")"
+                ;;
+            2)
+                v2RAY_PLUGIN="y"
+                ;;
+            esac
+        fi
     }
 
     choose-plugin
 
     function sysctl-install() {
         echo \
-        'fs.file-max = 51200
+            'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -440,32 +440,32 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-        >>$SHADOWSOCKS_IP_FORWARDING_PATH
+            >>$SHADOWSOCKS_IP_FORWARDING_PATH
         sysctl -p
     }
 
     function install-bbr() {
-    if { [ "$MODE_CHOICE" == "tcp_and_udp" ] || [ "$MODE_CHOICE" == "tcp_only" ]; }; then
-        if [ "$INSTALL_BBR" == "" ]; then
-            read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                sysctl-install
-                KERNEL_VERSION_LIMIT=4.1
-                KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
-                if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
-                    if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
-                        modprobe tcp_bbr
-                        echo "tcp_bbr" >>/etc/modules-load.d/modules.conf
-                        echo "net.core.default_qdisc=fq" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                        echo "net.ipv4.tcp_congestion_control=bbr" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                        sysctl -p
+        if { [ "$MODE_CHOICE" == "tcp_and_udp" ] || [ "$MODE_CHOICE" == "tcp_only" ]; }; then
+            if [ "$INSTALL_BBR" == "" ]; then
+                read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    sysctl-install
+                    KERNEL_VERSION_LIMIT=4.1
+                    KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
+                    if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
+                        if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
+                            modprobe tcp_bbr
+                            echo "tcp_bbr" >>/etc/modules-load.d/modules.conf
+                            echo "net.core.default_qdisc=fq" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                            echo "net.ipv4.tcp_congestion_control=bbr" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                            sysctl -p
+                        fi
+                    else
+                        echo "Error: Please update your kernel to 4.1 or higher" >&2
                     fi
-                else
-                    echo "Error: Please update your kernel to 4.1 or higher" >&2
                 fi
             fi
         fi
-    fi
     }
 
     # Install TCP BBR
@@ -489,23 +489,23 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     install-shadowsocks-server
-    
+
     function v2ray-installer() {
-      if [ "$v2RAY_PLUGIN" = "y" ]; then
-        curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
-        tar xvzf "$V2RAY_PLUGIN_PATH"
-        rm -f "$V2RAY_PLUGIN_PATH"
-      fi
+        if [ "$v2RAY_PLUGIN" = "y" ]; then
+            curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
+            tar xvzf "$V2RAY_PLUGIN_PATH"
+            rm -f "$V2RAY_PLUGIN_PATH"
+        fi
     }
 
     # v2ray-installer
 
     function shadowsocks-configuration() {
-    if [ "$v2RAY_PLUGIN" == "y" ]; then
-        echo "Config for v2ray"
-    else
-        # shellcheck disable=SC1078,SC1079
-        echo "{
+        if [ "$v2RAY_PLUGIN" == "y" ]; then
+            echo "Config for v2ray"
+        else
+            # shellcheck disable=SC1078,SC1079
+            echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
   ""\"mode""\":""\"$MODE_CHOICE""\",
   ""\"server_port""\":""\"$SERVER_PORT""\",
@@ -513,8 +513,8 @@ net.ipv4.tcp_congestion_control = hybla' \
   ""\"timeout""\":""\"$TIMEOUT_CHOICE""\",
   ""\"method""\":""\"$ENCRYPTION_CHOICE""\"
   }" >>$SHADOWSOCK_CONFIG_PATH
-    fi
-            snap run shadowsocks-libev.ss-server &
+        fi
+        snap run shadowsocks-libev.ss-server &
     }
 
     # Shadowsocks Config
