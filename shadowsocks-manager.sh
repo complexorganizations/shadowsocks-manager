@@ -127,6 +127,8 @@ headless-install
 SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
 SHADOWSOCK_CONFIG_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/config.json"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
+SHADOWSOCKS_TCP_BBR_PATH=""
+SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-"$CHECK_ARCHITECTURE"-v1.3.1.tar.gz)"
@@ -394,6 +396,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     choose-plugin
 
     function sysctl-install() {
+    if [ ! -f "$SHADOWSOCKS_TCP_BBR_PATH" ]; then
         echo \
             'fs.file-max = 51200
 net.core.rmem_max = 67108864
@@ -413,8 +416,9 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-            >>$SHADOWSOCKS_IP_FORWARDING_PATH
+            >>$SHADOWSOCKS_TCP_BBR_PATH
         sysctl -p
+    fi
     }
 
     function install-bbr() {
@@ -428,9 +432,9 @@ net.ipv4.tcp_congestion_control = hybla' \
                     if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
                         if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
                             modprobe tcp_bbr
-                            echo "tcp_bbr" >>/etc/modules-load.d/modules.conf
-                            echo "net.core.default_qdisc=fq" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                            echo "net.ipv4.tcp_congestion_control=bbr" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                            echo "tcp_bbr" >>$SYSTEM_TCP_BBR_LOAD_PATH
+                            echo "net.core.default_qdisc=fq" >>$SHADOWSOCKS_TCP_BBR_PATH
+                            echo "net.ipv4.tcp_congestion_control=bbr" >>$SHADOWSOCKS_TCP_BBR_PATH
                             sysctl -p
                         fi
                     else
@@ -572,7 +576,8 @@ else
             rm -rf $SHADOWSOCK_PATH
             rm -f $SHADOWSOCK_CONFIG_PATH
             rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
-            sed -i 's/\tcp_bbr//d' /etc/modules-load.d/modules.conf
+            rm -f $SHADOWSOCKS_TCP_BBR_PATH
+            sed -i 's/\tcp_bbr//d' $SYSTEM_TCP_BBR_LOAD_PATH
             ;;
         6)
             if pgrep systemd-journal; then
