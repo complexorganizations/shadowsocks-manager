@@ -482,7 +482,7 @@ net.ipv4.tcp_congestion_control = hybla' \
         fi
     }
 
-    # v2ray-installer
+    v2ray-installer
 
     function shadowsocks-configuration() {
         if [ "$V2RAY_COMPLETED" == "y" ]; then
