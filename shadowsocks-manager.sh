@@ -127,10 +127,12 @@ headless-install
 SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
 SHADOWSOCK_CONFIG_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/config.json"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
+SHADOWSOCKS_TCP_BBR_PATH=""
+SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-"$CHECK_ARCHITECTURE"-v1.3.1.tar.gz)"
-V2RAY_PLUGIN_PATH="$SHADOWSOCK_PATH/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz"
+V2RAY_PLUGIN_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz"
 
 if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
 
@@ -154,6 +156,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             until [[ "$SERVER_PORT" =~ ^[0-9]+$ ]] && [ "$SERVER_PORT" -ge 1 ] && [ "$SERVER_PORT" -le 65535 ]; do
                 read -rp "Custom port [1-65535]: " -e -i 80 SERVER_PORT
             done
+            if [ -z "$SERVER_PORT" ]; then
+                SERVER_PORT="80"
+            fi
             ;;
         esac
     }
@@ -175,6 +180,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             ;;
         2)
             PASSWORD_CHOICE="read -rp "Password " -e PASSWORD_CHOICE"
+            if [ -z "$PASSWORD_CHOICE" ]; then
+                PASSWORD_CHOICE="$(openssl rand -base64 25)"
+            fi
             ;;
         esac
     }
@@ -206,33 +214,6 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
 
     # encryption
     shadowsocks-encryption
-
-    # Determine Encryption
-    function shadowsocks-timeout() {
-        echo "Choose your timeout"
-        echo "   1) 60 (Recommended)"
-        echo "   2) 180"
-        echo "   3) Custom (Advanced)"
-        until [[ "$TIMEOUT_CHOICE_SETTINGS" =~ ^[1-3]$ ]]; do
-            read -rp "Timeout choice [1-3]: " -e -i 1 TIMEOUT_CHOICE_SETTINGS
-        done
-        case $TIMEOUT_CHOICE_SETTINGS in
-        1)
-            TIMEOUT_CHOICE="60"
-            ;;
-        2)
-            TIMEOUT_CHOICE="180"
-            ;;
-        3)
-            until [[ "$TIMEOUT_CHOICE" =~ ^[0-9]+$ ]] && [ "$TIMEOUT_CHOICE" -ge 1 ] && [ "$TIMEOUT_CHOICE" -le 900 ]; do
-                read -rp "Custom [1-900]: " -e -i 60 TIMEOUT_CHOICE
-            done
-            ;;
-        esac
-    }
-
-    # timeout
-    shadowsocks-timeout
 
     # Determine host port
     function test-connectivity-v4() {
@@ -295,13 +276,24 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         done
         case $SERVER_HOST_SETTINGS in
         1)
-            SERVER_HOST="$SERVER_HOST_V4"
+            if [ -n "$SERVER_HOST_V4" ]; then
+                SERVER_HOST="$SERVER_HOST_V4"
+            else
+                SERVER_HOST="[$SERVER_HOST_V6]"
+            fi
             ;;
         2)
-            SERVER_HOST="[$SERVER_HOST_V6]"
+            if [ -n "$SERVER_HOST_V6" ]; then
+                SERVER_HOST="[$SERVER_HOST_V6]"
+            else
+                SERVER_HOST="$SERVER_HOST_V4"
+            fi
             ;;
         3)
             read -rp "Custom Domain: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.hostname')" SERVER_HOST
+            if [ -z "$SERVER_HOST" ]; then
+                SERVER_HOST="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+            fi
             ;;
         esac
     }
@@ -382,9 +374,31 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     # Mode
     shadowsocks-mode
 
+    function choose-plugin() {
+        if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
+            echo "Would you like to install a plugin?"
+            echo "   1) No (Recommended)"
+            echo "   2) V2Ray (Advanced)"
+            until [[ "$PLUGIN_CHOICE_SETTINGS" =~ ^[1-2]$ ]]; do
+                read -rp "Plugin choice [1-2]: " -e -i 1 PLUGIN_CHOICE_SETTINGS
+            done
+            case $PLUGIN_CHOICE_SETTINGS in
+            1)
+                PLUGIN_CHOICE="Easy Mode"
+                ;;
+            2)
+                v2RAY_PLUGIN="y"
+                ;;
+            esac
+        fi
+    }
+
+    choose-plugin
+
     function sysctl-install() {
+    if [ ! -f "$SHADOWSOCKS_TCP_BBR_PATH" ]; then
         echo \
-        'fs.file-max = 51200
+            'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -402,32 +416,33 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-        >>$SHADOWSOCKS_IP_FORWARDING_PATH
+            >>"$SHADOWSOCKS_TCP_BBR_PATH"
         sysctl -p
+    fi
     }
 
     function install-bbr() {
-    if { [ "$MODE_CHOICE" == "tcp_and_udp" ] || [ "$MODE_CHOICE" == "tcp_only" ]; }; then
-        if [ "$INSTALL_BBR" == "" ]; then
-            read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                sysctl-install
-                KERNEL_VERSION_LIMIT=4.1
-                KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
-                if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
-                    if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
-                        modprobe tcp_bbr
-                        echo "tcp_bbr" >>/etc/modules-load.d/modules.conf
-                        echo "net.core.default_qdisc=fq" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                        echo "net.ipv4.tcp_congestion_control=bbr" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                        sysctl -p
+        if { [ "$MODE_CHOICE" == "tcp_and_udp" ] || [ "$MODE_CHOICE" == "tcp_only" ]; }; then
+            if [ "$INSTALL_BBR" == "" ]; then
+                read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    sysctl-install
+                    KERNEL_VERSION_LIMIT=4.1
+                    KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
+                    if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
+                        if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
+                            modprobe tcp_bbr
+                            echo "tcp_bbr" >>$SYSTEM_TCP_BBR_LOAD_PATH
+                            echo "net.core.default_qdisc=fq" >>"$SHADOWSOCKS_TCP_BBR_PATH"
+                            echo "net.ipv4.tcp_congestion_control=bbr" >>"$SHADOWSOCKS_TCP_BBR_PATH"
+                            sysctl -p
+                        fi
+                    else
+                        echo "Error: Please update your kernel to 4.1 or higher" >&2
                     fi
-                else
-                    echo "Error: Please update your kernel to 4.1 or higher" >&2
                 fi
             fi
         fi
-    fi
     }
 
     # Install TCP BBR
@@ -435,7 +450,7 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if [ ! -x "$(command -v ss)" ]; then
+        if [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ]; then
             if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
                 apt-get update
                 apt-get install snapd haveged qrencode -y
@@ -452,33 +467,54 @@ net.ipv4.tcp_congestion_control = hybla' \
     # Install shadowsocks Server
     install-shadowsocks-server
 
+    function v2ray-installer() {
+        if [ "$v2RAY_PLUGIN" = "y" ]; then
+            if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
+                curl -o "$V2RAY_PLUGIN_PATH" "$V2RAY_DOWNLOAD"
+                tar xvzf "$V2RAY_PLUGIN_PATH"
+                rm -f "$V2RAY_PLUGIN_PATH"
+                read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
+                if [ ! -x "$(command -v certbot)" ]; then
+                    curl https://get.acme.sh | sh
+                    ~/.acme.sh/acme.sh --issue --dns dns_cf -d "$DOMAIN_NAME"
+                fi
+                PLUGIN_CHOICE="v2ray-plugin"
+                PLUGIN_OPTS="server;tls;host=$DOMAIN_NAME"
+                V2RAY_COMPLETED="y"
+                SERVER_HOST="$DOMAIN_NAME"
+            fi
+        fi
+    }
+
+    v2ray-installer
+
     function shadowsocks-configuration() {
-        # shellcheck disable=SC1078,SC1079
-        echo "{
+        if [ "$V2RAY_COMPLETED" == "y" ]; then
+            # shellcheck disable=SC1078,SC1079
+            echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
   ""\"mode""\":""\"$MODE_CHOICE""\",
   ""\"server_port""\":""\"$SERVER_PORT""\",
   ""\"password""\":""\"$PASSWORD_CHOICE""\",
-  ""\"timeout""\":""\"$TIMEOUT_CHOICE""\",
+  ""\"method""\":""\"$ENCRYPTION_CHOICE""\",
+  ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
+  ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
+  }" >>$SHADOWSOCK_CONFIG_PATH
+        else
+            # shellcheck disable=SC1078,SC1079
+            echo "{
+  ""\"server""\":""\"$SERVER_HOST""\",
+  ""\"mode""\":""\"$MODE_CHOICE""\",
+  ""\"server_port""\":""\"$SERVER_PORT""\",
+  ""\"password""\":""\"$PASSWORD_CHOICE""\",
   ""\"method""\":""\"$ENCRYPTION_CHOICE""\"
   }" >>$SHADOWSOCK_CONFIG_PATH
-        if pgrep systemd-journal; then
-            snap run shadowsocks-libev.ss-server &
-        else
-            snap run shadowsocks-libev.ss-server &
         fi
+        snap run shadowsocks-libev.ss-server &
     }
 
     # Shadowsocks Config
     shadowsocks-configuration
-
-    function v2ray-installer() {
-        curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
-        tar xvzf "$V2RAY_PLUGIN_PATH"
-        rm -f "$V2RAY_PLUGIN_PATH"
-    }
-
-    # v2ray-installer
 
     function show-config() {
         qrencode -t ansiutf8 -l L <"$SHADOWSOCK_CONFIG_PATH"
@@ -540,9 +576,8 @@ else
             rm -rf $SHADOWSOCK_PATH
             rm -f $SHADOWSOCK_CONFIG_PATH
             rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
-            sed -i 's/\* soft nofile 51200//d' /etc/security/limits.conf
-            sed -i 's/\* hard nofile 51200//d' /etc/security/limits.conf
-            sed -i 's/\tcp_bbr//d' /etc/modules-load.d/modules.conf
+            rm -f "$SHADOWSOCKS_TCP_BBR_PATH"
+            sed -i 's/\tcp_bbr//d' $SYSTEM_TCP_BBR_LOAD_PATH
             ;;
         6)
             if pgrep systemd-journal; then
