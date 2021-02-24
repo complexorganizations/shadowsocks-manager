@@ -154,6 +154,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             until [[ "$SERVER_PORT" =~ ^[0-9]+$ ]] && [ "$SERVER_PORT" -ge 1 ] && [ "$SERVER_PORT" -le 65535 ]; do
                 read -rp "Custom port [1-65535]: " -e -i 80 SERVER_PORT
             done
+        if [ -z "$SERVER_PORT" ]; then
+          SERVER_PORT="80"
+        fi
             ;;
         esac
     }
@@ -175,6 +178,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             ;;
         2)
             PASSWORD_CHOICE="read -rp "Password " -e PASSWORD_CHOICE"
+        if [ -z "$PASSWORD_CHOICE" ]; then
+          PASSWORD_CHOICE="$(openssl rand -base64 25)"
+        fi
             ;;
         esac
     }
@@ -295,13 +301,24 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
         done
         case $SERVER_HOST_SETTINGS in
         1)
-            SERVER_HOST="$SERVER_HOST_V4"
+        if [ -n "$SERVER_HOST_V4" ]; then
+          SERVER_HOST="$SERVER_HOST_V4"
+        else
+          SERVER_HOST="[$SERVER_HOST_V6]"
+        fi
             ;;
         2)
-            SERVER_HOST="[$SERVER_HOST_V6]"
-            ;;
+        if [ -n "$SERVER_HOST_V6" ]; then
+          SERVER_HOST="[$SERVER_HOST_V6]"
+        else
+          SERVER_HOST="$SERVER_HOST_V4"
+        fi
+        ;;
         3)
             read -rp "Custom Domain: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.hostname')" SERVER_HOST
+         if [ -z "$SERVER_HOST" ]; then
+          SERVER_HOST="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+        fi
             ;;
         esac
     }
@@ -383,6 +400,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     shadowsocks-mode
 
     function choose-plugin() {
+    if [ "$MODE_CHOICE" == "tcp_only" ]; then
         echo "Would you like to install a plugin?"
         echo "   1) No (Recommended)"
         echo "   2) V2Ray (Advanced)"
@@ -397,6 +415,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             v2RAY_PLUGIN="y"
             ;;
         esac
+     fi
     }
 
     choose-plugin
