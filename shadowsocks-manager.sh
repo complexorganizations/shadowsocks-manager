@@ -465,13 +465,13 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     function v2ray-installer() {
         if [ "$v2RAY_PLUGIN" = "y" ]; then
-        if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
-            curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
-            tar xvzf "$V2RAY_PLUGIN_PATH"
-            rm -f "$V2RAY_PLUGIN_PATH"
-            PLUGIN_CHOICE="v2ray-plugin"
-            PLUGIN_OPTS="server;tls;host=mydomain.me"
-        fi
+            if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
+                curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
+                tar xvzf "$V2RAY_PLUGIN_PATH"
+                rm -f "$V2RAY_PLUGIN_PATH"
+                PLUGIN_CHOICE="v2ray-plugin"
+                PLUGIN_OPTS="server;tls;host=mydomain.me"
+            fi
         fi
     }
 
@@ -489,7 +489,7 @@ net.ipv4.tcp_congestion_control = hybla' \
   ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
   ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
   }" >>$SHADOWSOCK_CONFIG_PATH
-            else
+        else
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
