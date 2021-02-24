@@ -382,6 +382,25 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     # Mode
     shadowsocks-mode
 
+    function choose-plugin() {
+        echo "Would you like to install a plugin?"
+        echo "   1) No (Recommended)"
+        echo "   2) V2Ray (Advanced)"
+        until [[ "$PLUGIN_CHOICE_SETTINGS" =~ ^[1-2]$ ]]; do
+            read -rp "Plugin choice [1-2]: " -e -i 1 PLUGIN_CHOICE_SETTINGS
+        done
+        case $PLUGIN_CHOICE_SETTINGS in
+        1)
+            PLUGIN_CHOICE="$(echo "Easy Mode")"
+            ;;
+        2)
+            v2RAY_PLUGIN="y"
+            ;;
+        esac
+    }
+
+    choose-plugin
+
     function sysctl-install() {
         echo \
         'fs.file-max = 51200
@@ -435,7 +454,7 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if [ ! -x "$(command -v ss)" ]; then
+        if [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ]; then
             if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
                 apt-get update
                 apt-get install snapd haveged qrencode -y
@@ -451,8 +470,21 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install shadowsocks Server
     install-shadowsocks-server
+    
+    function v2ray-installer() {
+      if [ "$v2RAY_PLUGIN" = "y" ]; then
+        curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
+        tar xvzf "$V2RAY_PLUGIN_PATH"
+        rm -f "$V2RAY_PLUGIN_PATH"
+      fi
+    }
+
+    # v2ray-installer
 
     function shadowsocks-configuration() {
+    if [ "$v2RAY_PLUGIN" == "y" ]; then
+        echo "Config for v2ray"
+    else
         # shellcheck disable=SC1078,SC1079
         echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
@@ -462,23 +494,12 @@ net.ipv4.tcp_congestion_control = hybla' \
   ""\"timeout""\":""\"$TIMEOUT_CHOICE""\",
   ""\"method""\":""\"$ENCRYPTION_CHOICE""\"
   }" >>$SHADOWSOCK_CONFIG_PATH
-        if pgrep systemd-journal; then
+    fi
             snap run shadowsocks-libev.ss-server &
-        else
-            snap run shadowsocks-libev.ss-server &
-        fi
     }
 
     # Shadowsocks Config
     shadowsocks-configuration
-
-    function v2ray-installer() {
-        curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
-        tar xvzf "$V2RAY_PLUGIN_PATH"
-        rm -f "$V2RAY_PLUGIN_PATH"
-    }
-
-    # v2ray-installer
 
     function show-config() {
         qrencode -t ansiutf8 -l L <"$SHADOWSOCK_CONFIG_PATH"
