@@ -34,10 +34,6 @@ function installing-system-requirements() {
                 yum update -y && yum install epel-release iptables curl coreutils bc jq sed e2fsprogs zip unzip grep gawk iproute2 hostname systemd -y
             elif { [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ]; }; then
                 pacman -Syu --noconfirm iptables curl bc jq sed zip unzip grep gawk iproute2 hostname systemd
-            elif [ "$DISTRO" == "alpine" ]; then
-                apk update && apk add iptables curl bc jq sed zip unzip grep gawk iproute2 hostname systemd
-            elif [ "$DISTRO" == "freebsd" ]; then
-                pkg update && pkg install curl jq zip unzip gawk
             fi
         fi
     else
@@ -472,7 +468,7 @@ net.ipv4.tcp_congestion_control = hybla' \
         rm -f "$V2RAY_PLUGIN_PATH"
     }
 
-    v2ray-installer
+    # v2ray-installer
 
     function show-config() {
         qrencode -t ansiutf8 -l L <"$SHADOWSOCK_CONFIG_PATH"
