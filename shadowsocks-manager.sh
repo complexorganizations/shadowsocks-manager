@@ -213,33 +213,6 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     # encryption
     shadowsocks-encryption
 
-    # Determine Encryption
-    function shadowsocks-timeout() {
-        echo "Choose your timeout"
-        echo "   1) 60 (Recommended)"
-        echo "   2) 180"
-        echo "   3) Custom (Advanced)"
-        until [[ "$TIMEOUT_CHOICE_SETTINGS" =~ ^[1-3]$ ]]; do
-            read -rp "Timeout choice [1-3]: " -e -i 1 TIMEOUT_CHOICE_SETTINGS
-        done
-        case $TIMEOUT_CHOICE_SETTINGS in
-        1)
-            TIMEOUT_CHOICE="60"
-            ;;
-        2)
-            TIMEOUT_CHOICE="180"
-            ;;
-        3)
-            until [[ "$TIMEOUT_CHOICE" =~ ^[0-9]+$ ]] && [ "$TIMEOUT_CHOICE" -ge 1 ] && [ "$TIMEOUT_CHOICE" -le 900 ]; do
-                read -rp "Custom [1-900]: " -e -i 60 TIMEOUT_CHOICE
-            done
-            ;;
-        esac
-    }
-
-    # timeout
-    shadowsocks-timeout
-
     # Determine host port
     function test-connectivity-v4() {
         echo "How would you like to detect IPV4?"
@@ -400,7 +373,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     shadowsocks-mode
 
     function choose-plugin() {
-        if [ "$MODE_CHOICE" == "tcp_only" ]; then
+        if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
             echo "Would you like to install a plugin?"
             echo "   1) No (Recommended)"
             echo "   2) V2Ray (Advanced)"
@@ -492,9 +465,13 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     function v2ray-installer() {
         if [ "$v2RAY_PLUGIN" = "y" ]; then
+        if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
             curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
             tar xvzf "$V2RAY_PLUGIN_PATH"
             rm -f "$V2RAY_PLUGIN_PATH"
+            PLUGIN_CHOICE="v2ray-plugin"
+            PLUGIN_OPTS="server;tls;host=mydomain.me"
+        fi
         fi
     }
 
@@ -502,15 +479,23 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     function shadowsocks-configuration() {
         if [ "$v2RAY_PLUGIN" == "y" ]; then
-            echo "Config for v2ray"
-        else
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
   ""\"mode""\":""\"$MODE_CHOICE""\",
   ""\"server_port""\":""\"$SERVER_PORT""\",
   ""\"password""\":""\"$PASSWORD_CHOICE""\",
-  ""\"timeout""\":""\"$TIMEOUT_CHOICE""\",
+  ""\"method""\":""\"$ENCRYPTION_CHOICE""\",
+  ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
+  ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
+  }" >>$SHADOWSOCK_CONFIG_PATH
+            else
+            # shellcheck disable=SC1078,SC1079
+            echo "{
+  ""\"server""\":""\"$SERVER_HOST""\",
+  ""\"mode""\":""\"$MODE_CHOICE""\",
+  ""\"server_port""\":""\"$SERVER_PORT""\",
+  ""\"password""\":""\"$PASSWORD_CHOICE""\",
   ""\"method""\":""\"$ENCRYPTION_CHOICE""\"
   }" >>$SHADOWSOCK_CONFIG_PATH
         fi
@@ -580,8 +565,6 @@ else
             rm -rf $SHADOWSOCK_PATH
             rm -f $SHADOWSOCK_CONFIG_PATH
             rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
-            sed -i 's/\* soft nofile 51200//d' /etc/security/limits.conf
-            sed -i 's/\* hard nofile 51200//d' /etc/security/limits.conf
             sed -i 's/\tcp_bbr//d' /etc/modules-load.d/modules.conf
             ;;
         6)
