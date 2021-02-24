@@ -130,7 +130,7 @@ SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 V2RAY_DOWNLOAD="$(https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-"$CHECK_ARCHITECTURE"-v1.3.1.tar.gz)"
-V2RAY_PLUGIN_PATH="$SHADOWSOCK_PATH/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz"
+V2RAY_PLUGIN_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/v2ray-plugin-linux-$CHECK_ARCHITECTURE-v1.3.1.tar.gz"
 
 if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
 
