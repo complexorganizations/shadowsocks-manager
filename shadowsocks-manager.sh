@@ -469,6 +469,7 @@ net.ipv4.tcp_congestion_control = hybla' \
                 curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
                 tar xvzf "$V2RAY_PLUGIN_PATH"
                 rm -f "$V2RAY_PLUGIN_PATH"
+                read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 if [ ! -x "$(command -v certbot)" ]; then
                     curl https://get.acme.sh | sh
                     ~/.acme.sh/acme.sh --issue --dns dns_cf -d "$DOMAIN_NAME"
