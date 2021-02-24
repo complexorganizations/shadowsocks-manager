@@ -360,21 +360,21 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     # Determine TCP or UDP
     function shadowsocks-mode() {
         echo "Choose your method (UDP|TCP)"
-        echo "   1) (TCP|UDP) (Recommended)"
-        echo "   2) TCP"
-        echo "   3) UDP"
+        echo "   1) TCP (Recommended)"
+        echo "   2) UDP"
+        echo "   3) (TCP|UDP)"
         until [[ "$MODE_CHOICE_SETTINGS" =~ ^[1-3]$ ]]; do
             read -rp "Mode choice [1-3]: " -e -i 1 MODE_CHOICE_SETTINGS
         done
         case $MODE_CHOICE_SETTINGS in
         1)
-            MODE_CHOICE="tcp_and_udp"
-            ;;
-        2)
             MODE_CHOICE="tcp_only"
             ;;
-        3)
+        2)
             MODE_CHOICE="udp_only"
+            ;;
+        3)
+            MODE_CHOICE="tcp_and_udp"
             ;;
         esac
     }
