@@ -382,7 +382,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             done
             case $PLUGIN_CHOICE_SETTINGS in
             1)
-                PLUGIN_CHOICE="$(echo "Easy Mode")"
+                PLUGIN_CHOICE="Easy Mode"
                 ;;
             2)
                 v2RAY_PLUGIN="y"
