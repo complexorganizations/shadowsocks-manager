@@ -407,12 +407,11 @@ net.ipv4.tcp_congestion_control = hybla' \
     }
 
     function install-bbr() {
+    if { [ "$MODE_CHOICE" == "tcp_and_udp" ] || [ "$MODE_CHOICE" == "tcp_only" ]; }; then
         if [ "$INSTALL_BBR" == "" ]; then
             read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
             if [[ $REPLY =~ ^[Yy]$ ]]; then
-                # Run the systemctl install command
                 sysctl-install
-                # Check if tcp brr can be installed and if yes than install
                 KERNEL_VERSION_LIMIT=4.1
                 KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
                 if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
@@ -428,6 +427,7 @@ net.ipv4.tcp_congestion_control = hybla' \
                 fi
             fi
         fi
+    fi
     }
 
     # Install TCP BBR
