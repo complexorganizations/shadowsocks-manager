@@ -324,16 +324,29 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
                 echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
                 echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
                 sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+            else
+                rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
+                echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
             fi
             ;;
         2)
             if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
                 echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
                 sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+            else
+                rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
+                echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
             fi
             ;;
         3)
             if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
+                echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+            else
+                rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
                 echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
                 sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
             fi
@@ -358,10 +371,10 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             MODE_CHOICE="tcp_and_udp"
             ;;
         2)
-            MODE_CHOICE="tcp"
+            MODE_CHOICE="tcp_only"
             ;;
         3)
-            MODE_CHOICE="udp"
+            MODE_CHOICE="udp_only"
             ;;
         esac
     }
@@ -370,7 +383,6 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     shadowsocks-mode
 
     function sysctl-install() {
-        # Ammend configuration specifics for sysctl.conf
         echo \
         'fs.file-max = 51200
 net.core.rmem_max = 67108864
@@ -441,8 +453,6 @@ net.ipv4.tcp_congestion_control = hybla' \
     install-shadowsocks-server
 
     function shadowsocks-configuration() {
-        mkdir /var/snap/shadowsocks-libev/common/etc
-        mkdir /var/snap/shadowsocks-libev/common/etc/shadowsocks-libev
         # shellcheck disable=SC1078,SC1079
         echo "{
   ""\"server""\":""\"$SERVER_HOST""\",
@@ -463,7 +473,7 @@ net.ipv4.tcp_congestion_control = hybla' \
     shadowsocks-configuration
 
     function v2ray-installer() {
-        curl "$V2RAY_DOWNLOAD" --create-dirs -o "$V2RAY_PLUGIN_PATH"
+        curl "$V2RAY_DOWNLOAD" -o "$V2RAY_PLUGIN_PATH"
         tar xvzf "$V2RAY_PLUGIN_PATH"
         rm -f "$V2RAY_PLUGIN_PATH"
     }
