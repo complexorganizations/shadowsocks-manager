@@ -477,6 +477,7 @@ net.ipv4.tcp_congestion_control = hybla' \
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;host=$DOMAIN_NAME"
                 V2RAY_COMPLETED="y"
+                SERVER_HOST="$DOMAIN_NAME"
             fi
         fi
     }
