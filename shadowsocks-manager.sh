@@ -417,7 +417,7 @@ net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
             >>"$SHADOWSOCKS_TCP_BBR_PATH"
-        sysctl -p $SHADOWSOCKS_TCP_BBR_PATH
+        sysctl -p "$SHADOWSOCKS_TCP_BBR_PATH"
     fi
     }
     
