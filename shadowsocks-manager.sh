@@ -448,25 +448,7 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install TCP BBR
     install-bbr
-
-    # Install shadowsocks Server
-    function install-shadowsocks-server() {
-        if [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ]; then
-            if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
-                apt-get update
-                apt-get install snapd haveged qrencode -y
-                snap install core shadowsocks-libev
-            elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
-                dnf upgrade -y
-                dnf install epel-release -y
-                yum install snapd haveged -y
-                snap install core shadowsocks-libev
-            fi
-        fi
-    }
-
-    # Install shadowsocks Server
-    install-shadowsocks-server
+    
 
     function v2ray-installer() {
         if [ "$v2RAY_PLUGIN" = "y" ]; then
@@ -486,6 +468,25 @@ net.ipv4.tcp_congestion_control = hybla' \
     }
 
     v2ray-installer
+
+    # Install shadowsocks Server
+    function install-shadowsocks-server() {
+        if [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ]; then
+            if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
+                apt-get update
+                apt-get install snapd haveged qrencode -y
+                snap install core shadowsocks-libev
+            elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
+                dnf upgrade -y
+                dnf install epel-release -y
+                yum install snapd haveged -y
+                snap install core shadowsocks-libev
+            fi
+        fi
+    }
+
+    # Install shadowsocks Server
+    install-shadowsocks-server
 
     function shadowsocks-configuration() {
         if [ "$V2RAY_COMPLETED" == "y" ]; then
