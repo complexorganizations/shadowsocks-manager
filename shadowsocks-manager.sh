@@ -417,16 +417,17 @@ net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
             >>"$SHADOWSOCKS_TCP_BBR_PATH"
-        sysctl -p
+        sysctl -p $SHADOWSOCKS_TCP_BBR_PATH
     fi
     }
+    
+    sysctl-install
 
     function install-bbr() {
         if { [ "$MODE_CHOICE" == "tcp_and_udp" ] || [ "$MODE_CHOICE" == "tcp_only" ]; }; then
             if [ "$INSTALL_BBR" == "" ]; then
                 read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
                 if [[ $REPLY =~ ^[Yy]$ ]]; then
-                    sysctl-install
                     KERNEL_VERSION_LIMIT=4.1
                     KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
                     if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
@@ -474,10 +475,8 @@ net.ipv4.tcp_congestion_control = hybla' \
                 tar xvzf "$V2RAY_PLUGIN_PATH"
                 rm -f "$V2RAY_PLUGIN_PATH"
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                if [ ! -x "$(command -v certbot)" ]; then
-                    curl https://get.acme.sh | sh
-                    ~/.acme.sh/acme.sh --issue --dns dns_cf -d "$DOMAIN_NAME"
-                fi
+                curl https://get.acme.sh | sh
+                ~/.acme.sh/acme.sh --issue --dns dns_cf -d "$DOMAIN_NAME"
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;host=$DOMAIN_NAME"
                 V2RAY_COMPLETED="y"
@@ -517,7 +516,7 @@ net.ipv4.tcp_congestion_control = hybla' \
     shadowsocks-configuration
 
     function show-config() {
-        qrencode -t ansiutf8 -l L <"$SHADOWSOCK_CONFIG_PATH"
+        qrencode # ss://$ENCRYPTION_CHOICE:$PASSWORD_CHOICE@$SERVER_HOST:$SERVER_PORT
         echo "Config File ---> $SHADOWSOCK_CONFIG_PATH"
         echo "Shadowsocks Server IP: $SERVER_HOST"
         echo "Shadowsocks Server Port: $SERVER_PORT"
@@ -538,7 +537,7 @@ else
         echo "   1) Start ShadowSocks"
         echo "   2) Stop ShadowSocks"
         echo "   3) Restart ShadowSocks"
-        echo "   4) Show QR Code"
+        echo "   4) Show Config"
         echo "   5) Uninstall ShadowSocks"
         echo "   6) Reinstall ShadowSocks"
         echo "   7) Update this script"
@@ -556,7 +555,7 @@ else
             snap restart shadowsocks-libev.ss-server &
             ;;
         4)
-            qrencode -t ansiutf8 -l L <$SHADOWSOCK_CONFIG_PATH
+            cat $SHADOWSOCK_CONFIG_PATH
             ;;
         5)
             snap stop shadowsocks-libev.ss-server &
@@ -577,7 +576,6 @@ else
             rm -f $SHADOWSOCK_CONFIG_PATH
             rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
             rm -f "$SHADOWSOCKS_TCP_BBR_PATH"
-            sed -i 's/\tcp_bbr//d' $SYSTEM_TCP_BBR_LOAD_PATH
             ;;
         6)
             if pgrep systemd-journal; then
