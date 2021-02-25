@@ -454,7 +454,10 @@ net.ipv4.tcp_congestion_control = hybla' \
     function v2ray-installer() {
         if [ "$v2RAY_PLUGIN" = "y" ]; then
             if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
-                curl -o --create-dirs "$V2RAY_PLUGIN_PATH" "$V2RAY_DOWNLOAD"
+    if [ ! -f "$SHADOWSOCKS_COMMON_PATH" ]; then
+        mkdir -p $SHADOWSOCKS_COMMON_PATH
+    fi
+                curl -o "$V2RAY_PLUGIN_PATH" "$V2RAY_DOWNLOAD"
                 tar xvzf "$V2RAY_PLUGIN_PATH"
                 rm -f "$V2RAY_PLUGIN_PATH"
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
