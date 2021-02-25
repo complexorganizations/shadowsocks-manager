@@ -125,7 +125,8 @@ function headless-install() {
 headless-install
 
 SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
-SHADOWSOCK_CONFIG_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev/config.json"
+SHADOWSOCKS_COMMON_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev"
+SHADOWSOCK_CONFIG_PATH="$SHADOWSOCKS_COMMON_PATH/config.json"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
 SHADOWSOCKS_TCP_BBR_PATH=""
 SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
@@ -489,6 +490,9 @@ net.ipv4.tcp_congestion_control = hybla' \
     install-shadowsocks-server
 
     function shadowsocks-configuration() {
+    if [ ! -f "$SHADOWSOCKS_COMMON_PATH" ]; then
+        mkdir -p $SHADOWSOCKS_COMMON_PATH
+    fi
         if [ "$V2RAY_COMPLETED" == "y" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
