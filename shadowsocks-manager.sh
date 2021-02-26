@@ -477,7 +477,7 @@ root hard nofile 51200" >>$SYSTEM_LIMITS
                 curl -L -o "$V2RAY_PLUGIN_PATH" "$V2RAY_DOWNLOAD"
                 tar xvzf "$V2RAY_PLUGIN_PATH"
                 rm -f "$V2RAY_PLUGIN_PATH"
-                # find $V2RAY_DOWNLOAD -iname 'v2ray*' -exec mv '{}' v2ray-plugin \;
+                find "$SHADOWSOCKS_COMMON_PATH" -name "v2ray*" -exec mv {} "$SHADOWSOCKS_COMMON_PATH"/v2ray-plugin \;
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 curl https://get.acme.sh | sh
                 ~/.acme.sh/acme.sh --issue --dns dns_cf -d "$DOMAIN_NAME"
