@@ -397,9 +397,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     choose-plugin
 
     function sysctl-install() {
-    if [ ! -f "$SHADOWSOCKS_TCP_BBR_PATH" ]; then
-        echo \
-            'fs.file-max = 51200
+        if [ ! -f "$SHADOWSOCKS_TCP_BBR_PATH" ]; then
+            echo \
+                'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -417,11 +417,11 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-            >>"$SHADOWSOCKS_TCP_BBR_PATH"
-        sysctl -p "$SHADOWSOCKS_TCP_BBR_PATH"
-    fi
+                >>"$SHADOWSOCKS_TCP_BBR_PATH"
+            sysctl -p "$SHADOWSOCKS_TCP_BBR_PATH"
+        fi
     }
-    
+
     sysctl-install
 
     function install-bbr() {
@@ -449,14 +449,13 @@ net.ipv4.tcp_congestion_control = hybla' \
 
     # Install TCP BBR
     install-bbr
-    
 
     function v2ray-installer() {
         if [ "$v2RAY_PLUGIN" = "y" ]; then
             if { [ "$MODE_CHOICE" == "tcp_only" ] && [ "$SERVER_PORT" == "443" ]; }; then
-    if [ ! -f "$SHADOWSOCKS_COMMON_PATH" ]; then
-        mkdir -p $SHADOWSOCKS_COMMON_PATH
-    fi
+                if [ ! -d "$SHADOWSOCKS_COMMON_PATH" ]; then
+                    mkdir -p $SHADOWSOCKS_COMMON_PATH
+                fi
                 curl -o "$V2RAY_PLUGIN_PATH" "$V2RAY_DOWNLOAD"
                 tar xvzf "$V2RAY_PLUGIN_PATH"
                 rm -f "$V2RAY_PLUGIN_PATH"
@@ -493,9 +492,9 @@ net.ipv4.tcp_congestion_control = hybla' \
     install-shadowsocks-server
 
     function shadowsocks-configuration() {
-    if [ ! -f "$SHADOWSOCKS_COMMON_PATH" ]; then
-        mkdir -p $SHADOWSOCKS_COMMON_PATH
-    fi
+        if [ ! -d "$SHADOWSOCKS_COMMON_PATH" ]; then
+            mkdir -p $SHADOWSOCKS_COMMON_PATH
+        fi
         if [ "$V2RAY_COMPLETED" == "y" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
