@@ -599,9 +599,12 @@ else
                 yum remove snapd -y
             fi
             rm -rf $SHADOWSOCK_PATH
+            rm -rf $SHADOWSOCKS_COMMON_PATH
             rm -f $SHADOWSOCK_CONFIG_PATH
             rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
-            rm -f "$SHADOWSOCKS_TCP_BBR_PATH"
+            rm -f $SYSTEM_TCP_BBR_LOAD_PATH
+            rm -f $SYSTEM_LIMITS
+            rm -f $V2RAY_PLUGIN_PATH
             ;;
         6)
             if pgrep systemd-journal; then
