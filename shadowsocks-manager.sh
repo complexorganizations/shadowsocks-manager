@@ -128,7 +128,8 @@ SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
 SHADOWSOCKS_COMMON_PATH="$SHADOWSOCK_PATH/common/etc/shadowsocks-libev"
 SHADOWSOCK_CONFIG_PATH="$SHADOWSOCKS_COMMON_PATH/config.json"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
-SHADOWSOCKS_TCP_BBR_PATH=""
+SHADOWSOCKS_TCP_BBR_PATH="/etc/sysctl.conf"
+SYSTEM_LIMITS="/etc/security/limits.conf"
 SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/master/shadowsocks-server.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
@@ -403,6 +404,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     choose-plugin
 
     function sysctl-install() {
+        rm -f $SHADOWSOCKS_TCP_BBR_PATH
         if [ ! -f "$SHADOWSOCKS_TCP_BBR_PATH" ]; then
             echo \
             'fs.file-max = 51200
@@ -425,6 +427,15 @@ net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
             >>"$SHADOWSOCKS_TCP_BBR_PATH"
             sysctl -p "$SHADOWSOCKS_TCP_BBR_PATH"
+            rm -f $SYSTEM_LIMITS
+        if [ ! -f "$SYSTEM_LIMITS" ]; then
+            echo "* soft nofile 51200
+* hard nofile 51200
+
+# for server running in root:
+root soft nofile 51200
+root hard nofile 51200" >> $SYSTEM_LIMITS
+        fi
         fi
     }
 
