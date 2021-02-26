@@ -523,7 +523,7 @@ root hard nofile 51200" >>$SYSTEM_LIMITS
   ""\"method""\":""\"$ENCRYPTION_CHOICE""\",
   ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
   ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
-  }" >>$SHADOWSOCK_CONFIG_PATH
+}" >>$SHADOWSOCK_CONFIG_PATH
         else
             # shellcheck disable=SC1078,SC1079
             echo "{
@@ -532,7 +532,7 @@ root hard nofile 51200" >>$SYSTEM_LIMITS
   ""\"server_port""\":""\"$SERVER_PORT""\",
   ""\"password""\":""\"$PASSWORD_CHOICE""\",
   ""\"method""\":""\"$ENCRYPTION_CHOICE""\"
-  }" >>$SHADOWSOCK_CONFIG_PATH
+}" >>$SHADOWSOCK_CONFIG_PATH
         fi
         snap run shadowsocks-libev.ss-server &
     }
