@@ -604,7 +604,7 @@ else
             rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
             rm -f $SYSTEM_TCP_BBR_LOAD_PATH
             rm -f $SYSTEM_LIMITS
-            rm -f $V2RAY_PLUGIN_PATH
+            rm -f "$V2RAY_PLUGIN_PATH"
             ;;
         6)
             if pgrep systemd-journal; then
