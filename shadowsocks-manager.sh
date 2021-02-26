@@ -316,32 +316,32 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
                 echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
                 echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p $SHADOWSOCKS_IP_FORWARDING_PATH
             else
                 rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
                 echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
                 echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p $SHADOWSOCKS_IP_FORWARDING_PATH
             fi
             ;;
         2)
             if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
                 echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p $SHADOWSOCKS_IP_FORWARDING_PATH
             else
                 rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
                 echo "net.ipv6.conf.all.forwarding=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p $SHADOWSOCKS_IP_FORWARDING_PATH
             fi
             ;;
         3)
             if [ ! -f "$SHADOWSOCKS_IP_FORWARDING_PATH" ]; then
                 echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p $SHADOWSOCKS_IP_FORWARDING_PATH
             else
                 rm -f $SHADOWSOCKS_IP_FORWARDING_PATH
                 echo "net.ipv4.ip_forward=1" >>$SHADOWSOCKS_IP_FORWARDING_PATH
-                sysctl -p SHADOWSOCKS_IP_FORWARDING_PATH
+                sysctl -p $SHADOWSOCKS_IP_FORWARDING_PATH
             fi
             ;;
         esac
