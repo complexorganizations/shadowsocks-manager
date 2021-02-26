@@ -450,7 +450,7 @@ root hard nofile 51200" >>$SYSTEM_LIMITS
                     KERNEL_VERSION_LIMIT=4.1
                     KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
                     if (($(echo "$KERNEL_CURRENT_VERSION >= $KERNEL_VERSION_LIMIT" | bc -l))); then
-                        if [ ! -f "$/etc/modules-load.d/modules.conf" ]; then
+                        if [ ! -f "$SYSTEM_TCP_BBR_LOAD_PATH" ]; then
                             modprobe tcp_bbr
                             echo "tcp_bbr" >>$SYSTEM_TCP_BBR_LOAD_PATH
                             echo "net.core.default_qdisc=fq" >>"$SHADOWSOCKS_TCP_BBR_PATH"
@@ -474,7 +474,7 @@ root hard nofile 51200" >>$SYSTEM_LIMITS
                 if [ ! -d "$SHADOWSOCKS_COMMON_PATH" ]; then
                     mkdir -p $SHADOWSOCKS_COMMON_PATH
                 fi
-                curl -o "$V2RAY_PLUGIN_PATH" "$V2RAY_DOWNLOAD"
+                curl -L -o "$V2RAY_PLUGIN_PATH" "$V2RAY_DOWNLOAD"
                 tar xvzf "$V2RAY_PLUGIN_PATH"
                 rm -f "$V2RAY_PLUGIN_PATH"
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
