@@ -234,6 +234,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             ;;
         3)
             read -rp "Custom IPV4: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V4
+            if [ -z "$SERVER_HOST_V4" ]; then
+                SERVER_HOST_V4="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+            fi
             ;;
         esac
     }
@@ -259,6 +262,9 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
             ;;
         3)
             read -rp "Custom IPV6: " -e -i "$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V6
+            if [ -z "$SERVER_HOST_V6" ]; then
+                SERVER_HOST_V6="$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+            fi
             ;;
         esac
     }
@@ -399,7 +405,7 @@ if [ ! -f "$SHADOWSOCK_CONFIG_PATH" ]; then
     function sysctl-install() {
         if [ ! -f "$SHADOWSOCKS_TCP_BBR_PATH" ]; then
             echo \
-                'fs.file-max = 51200
+            'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -417,7 +423,7 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-                >>"$SHADOWSOCKS_TCP_BBR_PATH"
+            >>"$SHADOWSOCKS_TCP_BBR_PATH"
             sysctl -p "$SHADOWSOCKS_TCP_BBR_PATH"
         fi
     }
