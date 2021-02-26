@@ -427,16 +427,17 @@ net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
             >>"$SHADOWSOCKS_TCP_BBR_PATH"
             sysctl -p "$SHADOWSOCKS_TCP_BBR_PATH"
-            rm -f $SYSTEM_LIMITS
+        fi
+        rm -f $SYSTEM_LIMITS
         if [ ! -f "$SYSTEM_LIMITS" ]; then
             echo "* soft nofile 51200
 * hard nofile 51200
 
 # for server running in root:
 root soft nofile 51200
-root hard nofile 51200" >> $SYSTEM_LIMITS
+root hard nofile 51200" >>$SYSTEM_LIMITS
         fi
-        fi
+        sysctl -p "$SYSTEM_LIMITS"
     }
 
     sysctl-install
