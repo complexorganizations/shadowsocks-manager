@@ -446,7 +446,7 @@ net.ipv4.tcp_congestion_control = hybla' \
                             sysctl -p
                         fi
                     else
-                        echo "Error: Please update your kernel to 4.1 or higher" >&2
+                        echo "Error: Please update your kernel to 4.1 or higher"
                     fi
                 fi
             fi
