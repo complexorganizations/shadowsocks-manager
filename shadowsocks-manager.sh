@@ -480,7 +480,7 @@ root hard nofile 51200" >>$SYSTEM_LIMITS
                 find "$SHADOWSOCKS_COMMON_PATH" -name "v2ray*" -exec mv {} "$SHADOWSOCKS_COMMON_PATH"/v2ray-plugin \;
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 curl https://get.acme.sh | sh
-                ~/.acme.sh/acme.sh --issue --dns dns_cf -d "$DOMAIN_NAME"
+                ~/.acme.sh/acme.sh --issue --standalone -d "$DOMAIN_NAME"
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;host=$DOMAIN_NAME"
                 V2RAY_COMPLETED="y"
@@ -493,15 +493,15 @@ root hard nofile 51200" >>$SYSTEM_LIMITS
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ]; then
+        if { [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v qrencode)" ] || [ ! -x "$(command -v socat)" ]; }; then
             if { [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ] || [ "$DISTRO" == "raspbian" ] || [ "$DISTRO" == "pop" ] || [ "$DISTRO" == "kali" ] || [ "$DISTRO" == "linuxmint" ] || [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ] || [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "manjaro" ] || [ "$DISTRO" == "alpine" ] || [ "$DISTRO" == "freebsd" ]; }; then
                 apt-get update
-                apt-get install snapd haveged qrencode -y
+                apt-get install snapd haveged qrencode socat -y
                 snap install core shadowsocks-libev
             elif { [ "$DISTRO" == "fedora" ] || [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; }; then
                 dnf upgrade -y
                 dnf install epel-release -y
-                yum install snapd haveged -y
+                yum install snapd haveged socat -y
                 snap install core shadowsocks-libev
             fi
         fi
