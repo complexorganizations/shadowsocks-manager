@@ -3,7 +3,7 @@
 
 # Require script to be run as root
 function super-user-check() {
-    if [ "${EUID}" -ne 0 ]; then
+    if [ "$EUID" -ne 0 ]; then
         echo "You need to run this script as super user."
         exit
     fi
@@ -17,7 +17,7 @@ function dist-check() {
     if [ -e /etc/os-release ]; then
         # shellcheck disable=SC1091
         source /etc/os-release
-        DISTRO=${ID}
+        DISTRO=$ID
     fi
 }
 
@@ -279,10 +279,10 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
         echo "  1) IPv4 (Recommended)"
         echo "  2) IPv6"
         echo "  3) Custom (Advanced)"
-        until [[ "${SERVER_HOST}_SETTINGS" =~ ^[1-3]$ ]]; do
+        until [[ "$SERVER_HOST_SETTINGS" =~ ^[1-3]$ ]]; do
             read -rp "IP Choice [1-3]: " -e -i 1 SERVER_HOST_SETTINGS
         done
-        case ${SERVER_HOST}_SETTINGS in
+        case $SERVER_HOST_SETTINGS in
         1)
             if [ -n "${SERVER_HOST_V4}" ]; then
                 SERVER_HOST="${SERVER_HOST_V4}"
@@ -315,10 +315,10 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
         echo "  1) No (Recommended)"
         echo "  2) Disable IPV4"
         echo "  3) Disable IPV6"
-        until [[ "$DISABLE_HOST_SETTINGS" =~ ^[1-3]$ ]]; do
+        until [[ "${DISABLE_HOST_SETTINGS}" =~ ^[1-3]$ ]]; do
             read -rp "Disable Host Choice [1-3]: " -e -i 1 DISABLE_HOST_SETTINGS
         done
-        case $DISABLE_HOST_SETTINGS in
+        case ${DISABLE_HOST_SETTINGS} in
         1)
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
@@ -444,7 +444,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     function install-bbr() {
         if { [ "${MODE_CHOICE}" == "tcp_and_udp" ] || [ "${MODE_CHOICE}" == "tcp_only" ]; }; then
-            if [ "$INSTALL_BBR" == "" ]; then
+            if [ "${INSTALL_BBR}" == "" ]; then
                 read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
                 if [[ $REPLY =~ ^[Yy]$ ]]; then
                     KERNEL_VERSION_LIMIT=4.1
@@ -480,11 +480,11 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 curl https://get.acme.sh | sh
-                ~/.acme.sh/acme.sh --issue --standalone -d "$DOMAIN_NAME"
+                ~/.acme.sh/acme.sh --issue --standalone -d "${DOMAIN_NAME}"
                 PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server;tls;host=$DOMAIN_NAME"
+                PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
                 V2RAY_COMPLETED="y"
-                SERVER_HOST="$DOMAIN_NAME"
+                SERVER_HOST="${DOMAIN_NAME}"
             fi
         fi
     }
@@ -514,7 +514,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
             mkdir -p ${SHADOWSOCKS_COMMON_PATH}
         fi
-        if [ "${V2RAY_COMPLETED}" == "y" ]; then
+        if [ "$V2RAY_COMPLETED" == "y" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"${SERVER_HOST}""\",
@@ -522,8 +522,8 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
   ""\"server_port""\":""\"${SERVER_PORT}""\",
   ""\"password""\":""\"${PASSWORD_CHOICE}""\",
   ""\"method""\":""\"${ENCRYPTION_CHOICE}""\",
-  ""\"plugin""\":""\"${PLUGIN_CHOICE}""\",
-  ""\"plugin_opts""\":""\"${PLUGIN_OPTS}""\"
+  ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
+  ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
 }" >>${SHADOWSOCK_CONFIG_PATH}
         else
             # shellcheck disable=SC1078,SC1079
@@ -567,10 +567,10 @@ else
         echo "   5) Uninstall ShadowSocks"
         echo "   6) Reinstall ShadowSocks"
         echo "   7) Update this script"
-        until [[ "$SHADOWSOCKS_OPTIONS" =~ ^[1-7]$ ]]; do
+        until [[ "${SHADOWSOCKS_OPTIONS}" =~ ^[1-7]$ ]]; do
             read -rp "Select an Option [1-7]: " -e -i 1 SHADOWSOCKS_OPTIONS
         done
-        case $SHADOWSOCKS_OPTIONS in
+        case ${SHADOWSOCKS_OPTIONS} in
         1)
             snap run shadowsocks-libev.ss-server &
             ;;
