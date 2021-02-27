@@ -446,7 +446,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     # Install shadowsocks Server
     function install-shadowsocks-server() {
         if { [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v qrencode)" ] || [ ! -x "$(command -v socat)" ]; }; then
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ] || [ "${DISTRO}" == "arch" ] || [ "${DISTRO}" == "manjaro" ] || [ "${DISTRO}" == "alpine" ] || [ "${DISTRO}" == "freebsd" ]; }; then
+            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 apt-get update
                 apt-get install snapd haveged qrencode socat -y
                 snap install core shadowsocks-libev
