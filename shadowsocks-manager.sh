@@ -378,7 +378,7 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
     function sysctl-install() {
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
-                'fs.file-max = 51200
+            'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -396,7 +396,7 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         fi
         if [ ! -f "${SYSTEM_LIMITS}" ]; then
@@ -404,7 +404,7 @@ net.ipv4.tcp_congestion_control = hybla' \
 * hard nofile 51200
 root soft nofile 51200
 root hard nofile 51200" >>${SYSTEM_LIMITS}
-        sysctl -p "${SYSTEM_LIMITS}"
+            sysctl -p "${SYSTEM_LIMITS}"
         fi
     }
 
@@ -412,21 +412,21 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     function install-bbr() {
         if { [ "${MODE_CHOICE}" == "tcp_and_udp" ] || [ "${MODE_CHOICE}" == "tcp_only" ]; }; then
-                read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
-                    KERNEL_VERSION_LIMIT=4.1
-                    KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
-                    if (($(echo "${KERNEL_CURRENT_VERSION} >= ${KERNEL_VERSION_LIMIT}" | bc -l))); then
-                        if [ ! -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
-                            modprobe tcp_bbr
-                            echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
-                            echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                            echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                            sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
-                        fi
-                    else
-                        echo "Error: Please update your kernel to 4.1 or higher"
+            read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                KERNEL_VERSION_LIMIT=4.1
+                KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
+                if (($(echo "${KERNEL_CURRENT_VERSION} >= ${KERNEL_VERSION_LIMIT}" | bc -l))); then
+                    if [ ! -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
+                        modprobe tcp_bbr
+                        echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
+                        echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                        echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                        sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
                     fi
+                else
+                    echo "Error: Please update your kernel to 4.1 or higher"
+                fi
             fi
         fi
     }
