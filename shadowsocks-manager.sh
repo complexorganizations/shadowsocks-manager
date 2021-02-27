@@ -464,7 +464,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     snap refresh core
                     snap install --classic certbot
                     ln -s /snap/bin/certbot /usr/bin/certbot
-                    certbot certonly --standalone -n -d ${DOMAIN_NAME} --agree-tos -m support@${DOMAIN_NAME}
+                    certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
                     certbot renew --dry-run
                     PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
                     SERVER_HOST="${DOMAIN_NAME}"
