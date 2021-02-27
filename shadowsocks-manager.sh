@@ -141,9 +141,8 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
         echo "What port do you want Shadowsocks to listen to?"
         echo "   1) 80 (Recommended)"
         echo "   2) 443"
-        echo "   3) Custom (Advanced)"
-        until [[ "${PORT_CHOICE_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE_SETTINGS
+        until [[ "${PORT_CHOICE_SETTINGS}" =~ ^[1-2]$ ]]; do
+            read -rp "Port choice [1-2]: " -e -i 1 PORT_CHOICE_SETTINGS
         done
         case ${PORT_CHOICE_SETTINGS} in
         1)
@@ -151,14 +150,6 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
             ;;
         2)
             SERVER_PORT="443"
-            ;;
-        3)
-            until [[ "${SERVER_PORT}" =~ ^[0-9]+$ ]] && [ "${SERVER_PORT}" -ge 1 ] && [ "${SERVER_PORT}" -le 65535 ]; do
-                read -rp "Custom port [1-65535]: " -e -i 80 SERVER_PORT
-            done
-            if [ -z "${SERVER_PORT}" ]; then
-                SERVER_PORT="80"
-            fi
             ;;
         esac
     }
@@ -407,8 +398,6 @@ net.ipv4.tcp_congestion_control = hybla' \
         if [ ! -f "${SYSTEM_LIMITS}" ]; then
             echo "* soft nofile 51200
 * hard nofile 51200
-
-# for server running in root:
 root soft nofile 51200
 root hard nofile 51200" >>${SYSTEM_LIMITS}
         sysctl -p "${SYSTEM_LIMITS}"
@@ -429,7 +418,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                             echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
                             echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
                             echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                            sysctl -p
+                            sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
                         fi
                     else
                         echo "Error: Please update your kernel to 4.1 or higher"
@@ -565,13 +554,27 @@ else
                 snap remove --purge shadowsocks-libev -y
                 yum remove snapd -y
             fi
-            rm -rf "${SHADOWSOCK_PATH}"
-            rm -rf "${SHADOWSOCKS_COMMON_PATH}"
-            rm -f "${SHADOWSOCK_CONFIG_PATH}"
-            rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
-            rm -f "${SYSTEM_TCP_BBR_LOAD_PATH}"
-            rm -f "${SYSTEM_LIMITS}"
-            rm -f "${V2RAY_PLUGIN_PATH}"
+            if [ -d "${SHADOWSOCK_PATH}" ]; then
+                rm -rf "${SHADOWSOCK_PATH}"
+            fi
+            if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
+                rm -rf "${SHADOWSOCKS_COMMON_PATH}"
+            fi
+            if [ -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
+                rm -f "${SHADOWSOCK_CONFIG_PATH}"
+            fi
+            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
+                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
+            fi
+            if [ -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
+                rm -f "${SYSTEM_TCP_BBR_LOAD_PATH}"
+            fi
+            if [ -f "${SYSTEM_LIMITS}" ]; then
+                rm -f "${SYSTEM_LIMITS}"
+            fi
+            if [ -f "${V2RAY_PLUGIN_PATH}" ]; then
+                rm -f "${V2RAY_PLUGIN_PATH}"
+            fi
             ;;
         6)
             if pgrep systemd-journal; then
