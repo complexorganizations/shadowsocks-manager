@@ -107,7 +107,7 @@ usage "$@"
 
 # Skips all questions and just get a client conf after install.
 function headless-install() {
-    if [ "$HEADLESS_INSTALL" == "y" ]; then
+    if [ "${HEADLESS_INSTALL}" == "y" ]; then
         PORT_CHOICE_SETTINGS=${IPV4_SUBNET_SETTINGS:-1}
         PASSWORD_CHOICE_SETTINGS=${IPV6_SUBNET_SETTINGS:-1}
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
