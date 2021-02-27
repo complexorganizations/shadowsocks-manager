@@ -383,7 +383,6 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
     shadowsocks-mode
 
     function sysctl-install() {
-        rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
                 'fs.file-max = 51200
@@ -407,7 +406,6 @@ net.ipv4.tcp_congestion_control = hybla' \
                 >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         fi
-        rm -f ${SYSTEM_LIMITS}
         if [ ! -f "${SYSTEM_LIMITS}" ]; then
             echo "* soft nofile 51200
 * hard nofile 51200
@@ -415,15 +413,14 @@ net.ipv4.tcp_congestion_control = hybla' \
 # for server running in root:
 root soft nofile 51200
 root hard nofile 51200" >>${SYSTEM_LIMITS}
-        fi
         sysctl -p "${SYSTEM_LIMITS}"
+        fi
     }
 
     sysctl-install
 
     function install-bbr() {
         if { [ "${MODE_CHOICE}" == "tcp_and_udp" ] || [ "${MODE_CHOICE}" == "tcp_only" ]; }; then
-            if [ "${INSTALL_BBR}" == "" ]; then
                 read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
                 if [[ $REPLY =~ ^[Yy]$ ]]; then
                     KERNEL_VERSION_LIMIT=4.1
@@ -439,7 +436,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     else
                         echo "Error: Please update your kernel to 4.1 or higher"
                     fi
-                fi
             fi
         fi
     }
