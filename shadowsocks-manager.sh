@@ -386,7 +386,7 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
         rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
-            'fs.file-max = 51200
+                'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -404,7 +404,7 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         fi
         rm -f ${SYSTEM_LIMITS}
@@ -448,27 +448,27 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     install-bbr
 
     function v2ray-installer() {
-            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] && [ "${SERVER_PORT}" == "443" ]; }; then
-                if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-                    mkdir -p ${SHADOWSOCKS_COMMON_PATH}
-                fi
-                curl -L -o "${V2RAY_PLUGIN_PATH}" "${V2RAY_DOWNLOAD}"
-                tar xvzf "${V2RAY_PLUGIN_PATH}"
-                rm -f "${V2RAY_PLUGIN_PATH}"
-                find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
-                PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server"
-                if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
-                    read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                    snap install core
-                    snap refresh core
-                    snap install --classic certbot
-                    ln -s /snap/bin/certbot /usr/bin/certbot
-                    certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
-                    certbot renew --dry-run
-                    PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
-                    SERVER_HOST="${DOMAIN_NAME}"
-                fi
+        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] && [ "${SERVER_PORT}" == "443" ]; }; then
+            if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
+                mkdir -p ${SHADOWSOCKS_COMMON_PATH}
+            fi
+            curl -L -o "${V2RAY_PLUGIN_PATH}" "${V2RAY_DOWNLOAD}"
+            tar xvzf "${V2RAY_PLUGIN_PATH}"
+            rm -f "${V2RAY_PLUGIN_PATH}"
+            find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
+            PLUGIN_CHOICE="v2ray-plugin"
+            PLUGIN_OPTS="server"
+            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
+                read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
+                snap install core
+                snap refresh core
+                snap install --classic certbot
+                ln -s /snap/bin/certbot /usr/bin/certbot
+                certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
+                certbot renew --dry-run
+                PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
+                SERVER_HOST="${DOMAIN_NAME}"
+            fi
         fi
     }
 
