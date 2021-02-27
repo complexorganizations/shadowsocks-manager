@@ -479,8 +479,14 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 rm -f "${V2RAY_PLUGIN_PATH}"
                 find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                curl https://get.acme.sh | sh
-                ~/.acme.sh/acme.sh --issue --standalone -d "${DOMAIN_NAME}"
+                if [ ! -x "$(command -v certbot)" ]; then
+                    snap install core
+                    snap refresh core
+                    snap install --classic certbot
+                    ln -s /snap/bin/certbot /usr/bin/certbot
+                    certbot certonly --standalone
+                    certbot renew --dry-run
+                fi
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
                 V2RAY_COMPLETED="y"
