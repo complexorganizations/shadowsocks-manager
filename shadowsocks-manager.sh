@@ -479,12 +479,12 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 rm -f "${V2RAY_PLUGIN_PATH}"
                 find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                if [ ! -x "$(command -v certbot)" ]; then
+                if [ -n "${DOMAIN_NAME}" ]; then
                     snap install core
                     snap refresh core
                     snap install --classic certbot
                     ln -s /snap/bin/certbot /usr/bin/certbot
-                    certbot certonly --standalone
+                    certbot certonly --standalone -n -d ${DOMAIN_NAME} --agree-tos -m support@${DOMAIN_NAME}
                     certbot renew --dry-run
                 fi
                 PLUGIN_CHOICE="v2ray-plugin"
