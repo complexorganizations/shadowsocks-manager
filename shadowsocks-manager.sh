@@ -165,19 +165,12 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
     function shadowsocks-password() {
         echo "Choose your password"
         echo "   1) Random (Recommended)"
-        echo "   2) Custom (Advanced)"
-        until [[ "${PASSWORD_CHOICE_SETTINGS}" =~ ^[1-2]$ ]]; do
-            read -rp "Password choice [1-2]: " -e -i 1 PASSWORD_CHOICE_SETTINGS
+        until [[ "${PASSWORD_CHOICE_SETTINGS}" =~ ^[1-1]$ ]]; do
+            read -rp "Password choice [1-1]: " -e -i 1 PASSWORD_CHOICE_SETTINGS
         done
         case ${PASSWORD_CHOICE_SETTINGS} in
         1)
-            PASSWORD_CHOICE="$(openssl rand -base64 25)"
-            ;;
-        2)
-            PASSWORD_CHOICE="read -rp "Password " -e PASSWORD_CHOICE"
-            if [ -z "${PASSWORD_CHOICE}" ]; then
-                PASSWORD_CHOICE="$(openssl rand -base64 25)"
-            fi
+            PASSWORD_CHOICE="$(openssl rand -base64 50)"
             ;;
         esac
     }
@@ -352,22 +345,14 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
 
     # Determine TCP or UDP
     function shadowsocks-mode() {
-        echo "Choose your method (UDP|TCP)"
+        echo "Choose your method TCP"
         echo "   1) TCP (Recommended)"
-        echo "   2) UDP"
-        echo "   3) (TCP|UDP)"
-        until [[ "${MODE_CHOICE_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "Mode choice [1-3]: " -e -i 1 MODE_CHOICE_SETTINGS
+        until [[ "${MODE_CHOICE_SETTINGS}" =~ ^[1-1]$ ]]; do
+            read -rp "Mode choice [1-1]: " -e -i 1 MODE_CHOICE_SETTINGS
         done
         case ${MODE_CHOICE_SETTINGS} in
         1)
             MODE_CHOICE="tcp_only"
-            ;;
-        2)
-            MODE_CHOICE="udp_only"
-            ;;
-        3)
-            MODE_CHOICE="tcp_and_udp"
             ;;
         esac
     }
@@ -411,7 +396,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     sysctl-install
 
     function install-bbr() {
-        if { [ "${MODE_CHOICE}" == "tcp_and_udp" ] || [ "${MODE_CHOICE}" == "tcp_only" ]; }; then
+        if [ "${MODE_CHOICE}" == "tcp_only" ]; then
             read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 KERNEL_VERSION_LIMIT=4.1
