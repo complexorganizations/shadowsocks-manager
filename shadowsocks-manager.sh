@@ -444,7 +444,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     install-bbr
 
     function v2ray-installer() {
-        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] && [ "${SERVER_PORT}" == "443" ]; }; then
+        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
             if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
                 mkdir -p ${SHADOWSOCKS_COMMON_PATH}
             fi
@@ -452,9 +452,10 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
             tar xvzf "${V2RAY_PLUGIN_PATH}"
             rm -f "${V2RAY_PLUGIN_PATH}"
             find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
-            PLUGIN_CHOICE="v2ray-plugin"
-            PLUGIN_OPTS="server"
-            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
+            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; then
+                PLUGIN_CHOICE="v2ray-plugin"
+                PLUGIN_OPTS="server"
+            elif { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 snap install core
                 snap refresh core
@@ -462,6 +463,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 ln -s /snap/bin/certbot /usr/bin/certbot
                 certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
                 certbot renew --dry-run
+                PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
                 SERVER_HOST="${DOMAIN_NAME}"
             fi
