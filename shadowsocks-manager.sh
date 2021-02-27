@@ -382,32 +382,10 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
     # Mode
     shadowsocks-mode
 
-    function choose-plugin() {
-        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
-            echo "Would you like to install a plugin?"
-            echo "   1) No (Recommended)"
-            echo "   2) V2Ray (Advanced)"
-            until [[ "${PLUGIN_CHOICE_SETTINGS}" =~ ^[1-2]$ ]]; do
-                read -rp "Plugin choice [1-2]: " -e -i 1 PLUGIN_CHOICE_SETTINGS
-            done
-            case ${PLUGIN_CHOICE_SETTINGS} in
-            1)
-                PLUGIN_CHOICE="Easy Mode"
-                ;;
-            2)
-                v2RAY_PLUGIN="y"
-                ;;
-            esac
-        fi
-    }
-
-    choose-plugin
-
     function sysctl-install() {
-        rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
-            'fs.file-max = 51200
+                'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -425,10 +403,9 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         fi
-        rm -f ${SYSTEM_LIMITS}
         if [ ! -f "${SYSTEM_LIMITS}" ]; then
             echo "* soft nofile 51200
 * hard nofile 51200
@@ -436,15 +413,14 @@ net.ipv4.tcp_congestion_control = hybla' \
 # for server running in root:
 root soft nofile 51200
 root hard nofile 51200" >>${SYSTEM_LIMITS}
-        fi
         sysctl -p "${SYSTEM_LIMITS}"
+        fi
     }
 
     sysctl-install
 
     function install-bbr() {
         if { [ "${MODE_CHOICE}" == "tcp_and_udp" ] || [ "${MODE_CHOICE}" == "tcp_only" ]; }; then
-            if [ "${INSTALL_BBR}" == "" ]; then
                 read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
                 if [[ $REPLY =~ ^[Yy]$ ]]; then
                     KERNEL_VERSION_LIMIT=4.1
@@ -460,36 +436,12 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     else
                         echo "Error: Please update your kernel to 4.1 or higher"
                     fi
-                fi
             fi
         fi
     }
 
     # Install TCP BBR
     install-bbr
-
-    function v2ray-installer() {
-        if [ "$v2RAY_PLUGIN" = "y" ]; then
-            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
-                if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-                    mkdir -p ${SHADOWSOCKS_COMMON_PATH}
-                fi
-                curl -L -o "${V2RAY_PLUGIN_PATH}" "${V2RAY_DOWNLOAD}"
-                tar xvzf "${V2RAY_PLUGIN_PATH}"
-                rm -f "${V2RAY_PLUGIN_PATH}"
-                find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
-                read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                curl https://get.acme.sh | sh
-                ~/.acme.sh/acme.sh --issue --standalone -d "${DOMAIN_NAME}"
-                PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
-                V2RAY_COMPLETED="y"
-                SERVER_HOST="${DOMAIN_NAME}"
-            fi
-        fi
-    }
-
-    v2ray-installer
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
@@ -510,11 +462,37 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     # Install shadowsocks Server
     install-shadowsocks-server
 
+    function v2ray-installer() {
+        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
+            curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH}"
+            tar xvzf "${V2RAY_PLUGIN_PATH}"
+            rm -f "${V2RAY_PLUGIN_PATH}"
+            find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
+            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
+                PLUGIN_CHOICE="v2ray-plugin"
+                PLUGIN_OPTS="server"
+            elif { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
+                read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
+                snap install core
+                snap refresh core
+                snap install --classic certbot
+                ln -s /snap/bin/certbot /usr/bin/certbot
+                certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
+                certbot renew --dry-run
+                PLUGIN_CHOICE="v2ray-plugin"
+                PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
+                SERVER_HOST="${DOMAIN_NAME}"
+            fi
+        fi
+    }
+
+    v2ray-installer
+
     function shadowsocks-configuration() {
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
             mkdir -p ${SHADOWSOCKS_COMMON_PATH}
         fi
-        if [ "$V2RAY_COMPLETED" == "y" ]; then
+        if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"${SERVER_HOST}""\",
@@ -524,15 +502,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
   ""\"method""\":""\"${ENCRYPTION_CHOICE}""\",
   ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
   ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
-}" >>${SHADOWSOCK_CONFIG_PATH}
-        else
-            # shellcheck disable=SC1078,SC1079
-            echo "{
-  ""\"server""\":""\"${SERVER_HOST}""\",
-  ""\"mode""\":""\"${MODE_CHOICE}""\",
-  ""\"server_port""\":""\"${SERVER_PORT}""\",
-  ""\"password""\":""\"${PASSWORD_CHOICE}""\",
-  ""\"method""\":""\"${ENCRYPTION_CHOICE}""\"
 }" >>${SHADOWSOCK_CONFIG_PATH}
         fi
         snap run shadowsocks-libev.ss-server &
