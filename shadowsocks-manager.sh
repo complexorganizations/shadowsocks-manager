@@ -382,27 +382,6 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
     # Mode
     shadowsocks-mode
 
-    function choose-plugin() {
-        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
-            echo "Would you like to install a plugin?"
-            echo "   1) No (Recommended)"
-            echo "   2) V2Ray (Advanced)"
-            until [[ "${PLUGIN_CHOICE_SETTINGS}" =~ ^[1-2]$ ]]; do
-                read -rp "Plugin choice [1-2]: " -e -i 1 PLUGIN_CHOICE_SETTINGS
-            done
-            case ${PLUGIN_CHOICE_SETTINGS} in
-            1)
-                PLUGIN_CHOICE="Easy Mode"
-                ;;
-            2)
-                v2RAY_PLUGIN="y"
-                ;;
-            esac
-        fi
-    }
-
-    choose-plugin
-
     function sysctl-install() {
         rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
@@ -469,7 +448,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     install-bbr
 
     function v2ray-installer() {
-        if [ "$v2RAY_PLUGIN" = "y" ]; then
             if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
                 if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
                     mkdir -p ${SHADOWSOCKS_COMMON_PATH}
@@ -478,20 +456,19 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 tar xvzf "${V2RAY_PLUGIN_PATH}"
                 rm -f "${V2RAY_PLUGIN_PATH}"
                 find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} "${SHADOWSOCKS_COMMON_PATH}"/v2ray-plugin \;
-                read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                if [ -n "${DOMAIN_NAME}" ]; then
+                PLUGIN_CHOICE="v2ray-plugin"
+                PLUGIN_OPTS="server"
+                if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
+                    read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                     snap install core
                     snap refresh core
                     snap install --classic certbot
                     ln -s /snap/bin/certbot /usr/bin/certbot
                     certbot certonly --standalone -n -d ${DOMAIN_NAME} --agree-tos -m support@${DOMAIN_NAME}
                     certbot renew --dry-run
+                    PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
+                    SERVER_HOST="${DOMAIN_NAME}"
                 fi
-                PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
-                V2RAY_COMPLETED="y"
-                SERVER_HOST="${DOMAIN_NAME}"
-            fi
         fi
     }
 
@@ -520,7 +497,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
             mkdir -p ${SHADOWSOCKS_COMMON_PATH}
         fi
-        if [ "$V2RAY_COMPLETED" == "y" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"${SERVER_HOST}""\",
@@ -531,16 +507,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
   ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
   ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
 }" >>${SHADOWSOCK_CONFIG_PATH}
-        else
-            # shellcheck disable=SC1078,SC1079
-            echo "{
-  ""\"server""\":""\"${SERVER_HOST}""\",
-  ""\"mode""\":""\"${MODE_CHOICE}""\",
-  ""\"server_port""\":""\"${SERVER_PORT}""\",
-  ""\"password""\":""\"${PASSWORD_CHOICE}""\",
-  ""\"method""\":""\"${ENCRYPTION_CHOICE}""\"
-}" >>${SHADOWSOCK_CONFIG_PATH}
-        fi
         snap run shadowsocks-libev.ss-server &
     }
 
