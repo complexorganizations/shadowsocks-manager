@@ -165,13 +165,12 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
     function shadowsocks-password() {
         echo "Choose your password"
         echo "   1) Random (Recommended)"
-        echo "   2) Custom (Advanced)"
         until [[ "${PASSWORD_CHOICE_SETTINGS}" =~ ^[1-1]$ ]]; do
             read -rp "Password choice [1-1]: " -e -i 1 PASSWORD_CHOICE_SETTINGS
         done
         case ${PASSWORD_CHOICE_SETTINGS} in
         1)
-            PASSWORD_CHOICE="$(openssl rand -base64 25)"
+            PASSWORD_CHOICE="$(openssl rand -base64 50)"
             ;;
         esac
     }
@@ -346,7 +345,7 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
 
     # Determine TCP or UDP
     function shadowsocks-mode() {
-        echo "Choose your method (UDP|TCP)"
+        echo "Choose your method TCP"
         echo "   1) TCP (Recommended)"
         until [[ "${MODE_CHOICE_SETTINGS}" =~ ^[1-1]$ ]]; do
             read -rp "Mode choice [1-1]: " -e -i 1 MODE_CHOICE_SETTINGS
@@ -440,7 +439,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     install-shadowsocks-server
 
     function v2ray-installer() {
-        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
             curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH}"
             tar xvzf "${V2RAY_PLUGIN_PATH}"
             rm -f "${V2RAY_PLUGIN_PATH}"
@@ -460,7 +458,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 PLUGIN_OPTS="server;tls;host=${DOMAIN_NAME}"
                 SERVER_HOST="${DOMAIN_NAME}"
             fi
-        fi
     }
 
     v2ray-installer
