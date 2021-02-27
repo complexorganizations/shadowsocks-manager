@@ -75,17 +75,21 @@ function usage() {
             shift
             SHADOWSOCKS_OPTIONS=${SHADOWSOCKS_OPTIONS:-3}
             ;;
-        --reinstall)
-            shift
-            SHADOWSOCKS_OPTIONS=${SHADOWSOCKS_OPTIONS:-5}
-            ;;
-        --uninstall)
+        --show-config)
             shift
             SHADOWSOCKS_OPTIONS=${SHADOWSOCKS_OPTIONS:-4}
             ;;
+        --reinstall)
+            shift
+            SHADOWSOCKS_OPTIONS=${SHADOWSOCKS_OPTIONS:6}
+            ;;
+        --uninstall)
+            shift
+            SHADOWSOCKS_OPTIONS=${SHADOWSOCKS_OPTIONS:-5}
+            ;;
         --update)
             shift
-            SHADOWSOCKS_OPTIONS=${SHADOWSOCKS_OPTIONS:-6}
+            SHADOWSOCKS_OPTIONS=${SHADOWSOCKS_OPTIONS:-7}
             ;;
         --help)
             shift
