@@ -448,7 +448,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     install-bbr
 
     function v2ray-installer() {
-            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
+            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] && [ "${SERVER_PORT}" == "443" ]; }; then
                 if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
                     mkdir -p ${SHADOWSOCKS_COMMON_PATH}
                 fi
@@ -497,6 +497,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
             mkdir -p ${SHADOWSOCKS_COMMON_PATH}
         fi
+        if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"${SERVER_HOST}""\",
@@ -507,6 +508,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
   ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
   ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
 }" >>${SHADOWSOCK_CONFIG_PATH}
+        fi
         snap run shadowsocks-libev.ss-server &
     }
 
