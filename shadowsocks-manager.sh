@@ -467,6 +467,21 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     # Install TCP BBR
     install-bbr
+    
+    function create-user() {
+        if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
+            LINUX_USERNAME="$(openssl rand -hex 5)"
+            LINUX_PASSWORD="$(openssl rand -hex 10)"
+            useradd -m -s /bin/bash "${LINUX_USERNAME}"
+            echo -e "${LINUX_PASSWORD}\n${LINUX_PASSWORD}" | passwd "${LINUX_USERNAME}"
+            usermod -aG sudo "${LINUX_USERNAME}"
+            echo "Linux Information"
+            echo "Username: ${LINUX_USERNAME}"
+            echo "Password: ${LINUX_PASSWORD}"
+        fi
+}
+
+    create-user
 
     function v2ray-installer() {
         if [ "$v2RAY_PLUGIN" = "y" ]; then
