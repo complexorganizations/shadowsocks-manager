@@ -173,7 +173,6 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
         1)
             PASSWORD_CHOICE="$(openssl rand -base64 25)"
             ;;
-            ;;
         esac
     }
 
