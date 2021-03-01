@@ -170,7 +170,7 @@ if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
         done
         case ${PASSWORD_CHOICE_SETTINGS} in
         1)
-            PASSWORD_CHOICE="$(openssl rand -base64 50)"
+            PASSWORD_CHOICE="$(openssl rand -base64 25)"
             ;;
         esac
     }
