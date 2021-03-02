@@ -419,25 +419,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     # Install TCP BBR
     install-bbr
 
-    # Install shadowsocks Server
-    function install-shadowsocks-server() {
-        if { [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v qr)" ] || [ ! -x "$(command -v socat)" ]; }; then
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update
-                apt-get install snapd haveged python3-qrcode socat -y
-                snap install core shadowsocks-libev
-            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                dnf upgrade -y
-                dnf install epel-release -y
-                yum install snapd haveged socat python3-qrcode -y
-                snap install core shadowsocks-libev
-            fi
-        fi
-    }
-
-    # Install shadowsocks Server
-    install-shadowsocks-server
-
     function v2ray-installer() {
         if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
             curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH}"
@@ -463,6 +444,25 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     }
 
     v2ray-installer
+
+    # Install shadowsocks Server
+    function install-shadowsocks-server() {
+        if { [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v qr)" ] || [ ! -x "$(command -v socat)" ]; }; then
+            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
+                apt-get update
+                apt-get install snapd haveged python3-qrcode socat -y
+                snap install core shadowsocks-libev
+            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
+                dnf upgrade -y
+                dnf install epel-release -y
+                yum install snapd haveged socat python3-qrcode -y
+                snap install core shadowsocks-libev
+            fi
+        fi
+    }
+
+    # Install shadowsocks Server
+    install-shadowsocks-server
 
     function shadowsocks-configuration() {
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
