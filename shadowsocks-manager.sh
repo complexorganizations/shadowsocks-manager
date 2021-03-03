@@ -126,9 +126,10 @@ function headless-install() {
 # No GUI
 headless-install
 
-SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
-SHADOWSOCKS_COMMON_PATH="${SHADOWSOCK_PATH}/common/etc/shadowsocks-libev"
-SHADOWSOCK_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
+SHADOWSOCKS_PATH="/var/snap/shadowsocks-libev"
+SHADOWSOCKS_COMMON_PATH="${SHADOWSOCKS_PATH}/common/etc/shadowsocks-libev"
+SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
+SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-libev-server.service"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
 SHADOWSOCKS_TCP_BBR_PATH="/etc/sysctl.conf"
 SYSTEM_LIMITS="/etc/security/limits.conf"
@@ -463,12 +464,14 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     # Install shadowsocks Server
     install-shadowsocks-server
+    
+    function install-shadowsocks-service() 
 
     function shadowsocks-configuration() {
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
             mkdir -p ${SHADOWSOCKS_COMMON_PATH}
         fi
-        if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
+        if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"${SERVER_HOST}""\",
@@ -478,7 +481,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
   ""\"method""\":""\"${ENCRYPTION_CHOICE}""\",
   ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
   ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
-}" >>${SHADOWSOCK_CONFIG_PATH}
+}" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
         snap run shadowsocks-libev.ss-server &
     }
@@ -488,7 +491,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     function show-config() {
         echo -n ss://"$(echo -n "${ENCRYPTION_CHOICE}":"${PASSWORD_CHOICE}"@"${SERVER_HOST}":"${SERVER_PORT}" | base64)" | qr
-        echo "Config File ---> ${SHADOWSOCK_CONFIG_PATH}"
+        echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
         echo "Shadowsocks Server IP: ${SERVER_HOST}"
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
@@ -526,7 +529,7 @@ else
             snap restart shadowsocks-libev.ss-server &
             ;;
         4)
-            cat ${SHADOWSOCK_CONFIG_PATH}
+            cat ${SHADOWSOCKS_CONFIG_PATH}
             ;;
         5)
             snap stop shadowsocks-libev.ss-server &
