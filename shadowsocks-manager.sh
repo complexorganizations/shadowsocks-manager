@@ -131,6 +131,7 @@ SHADOWSOCKS_COMMON_PATH="${SHADOWSOCKS_PATH}/common/etc/shadowsocks-libev"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
 SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-libev.service"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks-libev.conf"
+SHADOWSOCKS_BIN_PATH="/usr/bin/shadowsocks-libev.ss-server"
 SHADOWSOCKS_TCP_BBR_PATH="/etc/sysctl.conf"
 SYSTEM_LIMITS="/etc/security/limits.conf"
 SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
@@ -485,8 +486,10 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 snap install core
                 snap refresh core
+            if [ ! -x "$(command -v certbot)" ]; then
                 snap install --classic certbot
                 ln -s /snap/bin/certbot /usr/bin/certbot
+            fi
                 certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
                 certbot renew --dry-run
                 PLUGIN_CHOICE="v2ray-plugin"
@@ -511,6 +514,12 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 yum install snapd haveged socat -y
                 snap install core shadowsocks-libev
             fi
+            if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
+                ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
+            else
+                rm -f ${SHADOWSOCKS_BIN_PATH}
+                ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
+            fi
         fi
     }
 
@@ -525,7 +534,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} -p ${SERVER_PORT} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
+ExecStart=shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} -p ${SERVER_PORT} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
