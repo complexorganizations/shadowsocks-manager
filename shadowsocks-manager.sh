@@ -137,7 +137,8 @@ SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 V2RAY_DOWNLOAD="https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
-V2RAY_PLUGIN_PATH="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
+V2RAY_PLUGIN_PATH_ZIPPED="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
+V2RAY_PLUGIN_PATH="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin"
 
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
@@ -422,10 +423,11 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     function v2ray-installer() {
         if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
-            curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH}"
-            tar xvzf "${V2RAY_PLUGIN_PATH}"
-            rm -f "${V2RAY_PLUGIN_PATH}"
+            curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
+            tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}"
+            rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
             find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
+            # find "$SHADOWSOCKS_COMMON_PATH" -name "v2ray*" -exec mv {} "$SHADOWSOCKS_COMMON_PATH"/v2ray-plugin \;
             if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server"
@@ -473,7 +475,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server
+ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} -p ${SERVER_PORT} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
@@ -602,8 +604,8 @@ else
             if [ -f "${SYSTEM_LIMITS}" ]; then
                 rm -f "${SYSTEM_LIMITS}"
             fi
-            if [ -f "${V2RAY_PLUGIN_PATH}" ]; then
-                rm -f "${V2RAY_PLUGIN_PATH}"
+            if [ -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
+                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
             fi
             ;;
         6) # Update the script
