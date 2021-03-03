@@ -472,7 +472,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
                 find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
             else
-                rm -f ${V2RAY_PLUGIN_PATH_ZIPPED}
+                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
                 curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
                 tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
                 rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
