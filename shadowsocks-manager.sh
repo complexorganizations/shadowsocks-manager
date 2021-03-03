@@ -130,7 +130,7 @@ SHADOWSOCKS_PATH="/var/snap/shadowsocks-libev"
 SHADOWSOCKS_COMMON_PATH="${SHADOWSOCKS_PATH}/common/etc/shadowsocks-libev"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
 SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-libev.service"
-SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
+SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks-libev.conf"
 SHADOWSOCKS_TCP_BBR_PATH="/etc/sysctl.conf"
 SYSTEM_LIMITS="/etc/security/limits.conf"
 SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
@@ -477,6 +477,7 @@ ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
+        systemctl daemon-reload
         fi
     }
 
