@@ -486,11 +486,13 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 snap install core
                 snap refresh core
-                if [ ! -x "$(command -v certbot)" ]; then
+                if [ ! -x "$(command -v snap run certbot)" ]; then
                     snap install --classic certbot
                 fi
                 if [ -f "/snap/bin/certbot" ]; then
-                    ln -s /snap/bin/certbot /usr/bin/certbot
+                    if [ ! -f "/usr/bin/certbot" ]; then
+                        ln -s /snap/bin/certbot /usr/bin/certbot
+                    fi
                 fi
                 if { [ ! -f "${LETS_ENCRYPT_CERT_PATH}" ] && [ ! -f "${LETS_ENCRYPT_KEY_PATH}" ]; }; then
                     certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
