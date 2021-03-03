@@ -488,10 +488,14 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 snap refresh core
                 if [ ! -x "$(command -v certbot)" ]; then
                     snap install --classic certbot
+                fi
+                if [ -f "/snap/bin/certbot" ]; then
                     ln -s /snap/bin/certbot /usr/bin/certbot
                 fi
-                certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
-                certbot renew --dry-run
+                if { [ ! -f "${LETS_ENCRYPT_CERT_PATH}" ] && [ ! -f "${LETS_ENCRYPT_KEY_PATH}" ]; }; then
+                    certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
+                    certbot renew --dry-run
+                fi
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;cert=${LETS_ENCRYPT_CERT_PATH};key=${LETS_ENCRYPT_KEY_PATH};host=${DOMAIN_NAME}"
                 SERVER_HOST="${DOMAIN_NAME}"
