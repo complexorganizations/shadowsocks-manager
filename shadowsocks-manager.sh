@@ -141,7 +141,9 @@ V2RAY_DOWNLOAD="https://github.com/shadowsocks/v2ray-plugin/releases/download/v1
 V2RAY_PLUGIN_PATH_ZIPPED="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 V2RAY_PLUGIN_PATH="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin"
 LETS_ENCRYPT_CERT_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem"
+SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH="${SHADOWSOCKS_COMMON_PATH}/fullchain.pem"
 LETS_ENCRYPT_KEY_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem"
+SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH="${SHADOWSOCKS_COMMON_PATH}/privkey.pem"
 
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
@@ -467,9 +469,12 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
                     certbot renew --dry-run
                 fi
+                if { [ -f "${LETS_ENCRYPT_CERT_PATH}" ] || [ -f "${LETS_ENCRYPT_KEY_PATH}" ]; }; then
+                    mv "${LETS_ENCRYPT_CERT_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}
+                    mv "${LETS_ENCRYPT_KEY_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
+                fi
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server;tls;cert=${LETS_ENCRYPT_CERT_PATH};key=${LETS_ENCRYPT_KEY_PATH};host=${DOMAIN_NAME}"
-                SERVER_HOST="${DOMAIN_NAME}"
             fi
         fi
     }
