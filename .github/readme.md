@@ -22,7 +22,7 @@ bash /usr/local/bin/shadowsocks-manager.sh
 ### Features
 - Install Shadowsocks
 - Uninstall Shadowsocks
-- V2Ray Plugin ***Coming soon***
+- V2Ray Plugin
 
 ---
 ### Q&A
