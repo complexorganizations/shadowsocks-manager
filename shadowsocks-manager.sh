@@ -131,6 +131,7 @@ SHADOWSOCKS_COMMON_PATH="${SHADOWSOCKS_PATH}/common/etc/shadowsocks-libev"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
 SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-libev.service"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks-libev.conf"
+SHADOWSOCKS_BIN_PATH="/usr/bin/shadowsocks-libev.ss-server"
 SHADOWSOCKS_TCP_BBR_PATH="/etc/sysctl.conf"
 SYSTEM_LIMITS="/etc/security/limits.conf"
 SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
@@ -139,6 +140,8 @@ CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 V2RAY_DOWNLOAD="https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 V2RAY_PLUGIN_PATH_ZIPPED="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 V2RAY_PLUGIN_PATH="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin"
+LETS_ENCRYPT_CERT_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem"
+LETS_ENCRYPT_KEY_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem"
 
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
@@ -365,7 +368,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     function sysctl-install() {
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
-            'fs.file-max = 51200
+                "fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -382,11 +385,41 @@ net.ipv4.tcp_mem = 25600 51200 102400
 net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
-net.ipv4.tcp_congestion_control = hybla' \
-            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+net.ipv4.tcp_congestion_control = hybla" \
+                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+            sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
+        else
+            rm -f "${SHADOWSOCKS_TCP_BBR_PATH}"
+            echo \
+                "fs.file-max = 51200
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.netdev_max_backlog = 250000
+net.core.somaxconn = 4096
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_keepalive_time = 1200
+net.ipv4.ip_local_port_range = 10000 65000
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_max_tw_buckets = 5000
+net.ipv4.tcp_fastopen = 3
+net.ipv4.tcp_mem = 25600 51200 102400
+net.ipv4.tcp_rmem = 4096 87380 67108864
+net.ipv4.tcp_wmem = 4096 65536 67108864
+net.ipv4.tcp_mtu_probing = 1
+net.ipv4.tcp_congestion_control = hybla" \
+                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         fi
         if [ ! -f "${SYSTEM_LIMITS}" ]; then
+            echo "* soft nofile 51200
+* hard nofile 51200
+root soft nofile 51200
+root hard nofile 51200" >>${SYSTEM_LIMITS}
+            sysctl -p "${SYSTEM_LIMITS}"
+        else
+            rm -f ${SYSTEM_LIMITS}
             echo "* soft nofile 51200
 * hard nofile 51200
 root soft nofile 51200
@@ -404,11 +437,22 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 KERNEL_VERSION_LIMIT=4.1
                 KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
                 if (($(echo "${KERNEL_CURRENT_VERSION} >= ${KERNEL_VERSION_LIMIT}" | bc -l))); then
+                    if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
+                        echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                        echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                    else
+                        rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
+                        echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                        echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                    fi
                     if [ ! -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
                         modprobe tcp_bbr
                         echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
-                        echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                        echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                        sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
+                    else
+                        rm -f ${SYSTEM_TCP_BBR_LOAD_PATH}
+                        modprobe tcp_bbr
+                        echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
                         sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
                     fi
                 else
@@ -423,10 +467,18 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     function v2ray-installer() {
         if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
-            curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
-            tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
-            rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
-            find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
+            if [ ! -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
+                curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
+                tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
+                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
+                find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
+            else
+                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
+                curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
+                tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
+                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
+                find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
+            fi
             if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server"
@@ -434,12 +486,18 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 snap install core
                 snap refresh core
-                snap install --classic certbot
-                ln -s /snap/bin/certbot /usr/bin/certbot
-                certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
-                certbot renew --dry-run
+                if [ ! -x "$(command -v certbot)" ]; then
+                    snap install --classic certbot
+                fi
+                if [ -f "/snap/bin/certbot" ]; then
+                    ln -s /snap/bin/certbot /usr/bin/certbot
+                fi
+                if { [ ! -f "${LETS_ENCRYPT_CERT_PATH}" ] && [ ! -f "${LETS_ENCRYPT_KEY_PATH}" ]; }; then
+                    certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
+                    certbot renew --dry-run
+                fi
                 PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server;tls;cert=/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;key=/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;host=${DOMAIN_NAME}"
+                PLUGIN_OPTS="server;tls;cert=${LETS_ENCRYPT_CERT_PATH};key=${LETS_ENCRYPT_KEY_PATH};host=${DOMAIN_NAME}"
                 SERVER_HOST="${DOMAIN_NAME}"
             fi
         fi
@@ -460,6 +518,12 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 yum install snapd haveged socat -y
                 snap install core shadowsocks-libev
             fi
+            if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
+                ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
+            else
+                rm -f ${SHADOWSOCKS_BIN_PATH}
+                ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
+            fi
         fi
     }
 
@@ -474,7 +538,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} -p ${SERVER_PORT} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
+ExecStart=shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} -p ${SERVER_PORT} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
