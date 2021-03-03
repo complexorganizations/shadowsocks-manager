@@ -497,8 +497,8 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
   ""\"server_port""\":""\"${SERVER_PORT}""\",
   ""\"password""\":""\"${PASSWORD_CHOICE}""\",
   ""\"method""\":""\"${ENCRYPTION_CHOICE}""\",
-  ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
-  ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
+  ""\"plugin""\":""\"${PLUGIN_CHOICE}""\",
+  ""\"plugin_opts""\":""\"${PLUGIN_OPTS}""\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
         if pgrep systemd-journal; then
