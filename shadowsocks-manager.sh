@@ -518,7 +518,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
+ExecStart=shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts \"${PLUGIN_OPTS}\"
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
@@ -533,15 +533,14 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
             rm -f ${SHADOWSOCKS_CONFIG_PATH}
         fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-            # shellcheck disable=SC1078,SC1079
             echo "{
-  ""\"server""\":""\"${SERVER_HOST}""\",
-  ""\"mode""\":""\"${MODE_CHOICE}""\",
-  ""\"server_port""\":""\"${SERVER_PORT}""\",
-  ""\"password""\":""\"${PASSWORD_CHOICE}""\",
-  ""\"method""\":""\"${ENCRYPTION_CHOICE}""\",
-  ""\"plugin""\":""\"${PLUGIN_CHOICE}""\",
-  ""\"plugin_opts""\":""\"${PLUGIN_OPTS}""\"
+  \"server\":\"${SERVER_HOST}\",
+  \"mode\":\"${MODE_CHOICE}\",
+  \"server_port\":\"${SERVER_PORT}\",
+  \"password\":\"${PASSWORD_CHOICE}\",
+  \"method\":\"${ENCRYPTION_CHOICE}\",
+  \"plugin\":\"${PLUGIN_CHOICE}\",
+  \"plugin_opts\":\"${PLUGIN_OPTS}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
         if pgrep systemd-journal; then
