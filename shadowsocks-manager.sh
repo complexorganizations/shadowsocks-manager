@@ -440,7 +440,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
                 certbot renew --dry-run
                 PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server;tls;cert=/etc/letsencrypt/live/shadowsocks.prajwalkoirala.com/cert.pem;key=/etc/letsencrypt/live/shadowsocks.prajwalkoirala.com/privkey.pem;host=${DOMAIN_NAME}"
+                PLUGIN_OPTS="server;tls;cert=/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;key=/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;host=${DOMAIN_NAME}"
                 SERVER_HOST="${DOMAIN_NAME}"
             fi
         fi
