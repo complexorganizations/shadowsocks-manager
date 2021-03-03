@@ -132,8 +132,6 @@ SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
 SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-libev.service"
 SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks-libev.conf"
 SHADOWSOCKS_BIN_PATH="/usr/bin/shadowsocks-libev.ss-server"
-SYSTEM_LIMITS="/etc/security/limits.conf"
-SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 if [ "${CHECK_ARCHITECTURE}" == "armhf" ]; then
@@ -566,12 +564,6 @@ else
             fi
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
-            fi
-            if [ -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
-                rm -f "${SYSTEM_TCP_BBR_LOAD_PATH}"
-            fi
-            if [ -f "${SYSTEM_LIMITS}" ]; then
-                rm -f "${SYSTEM_LIMITS}"
             fi
             if [ -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
                 rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
