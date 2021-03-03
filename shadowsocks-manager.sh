@@ -409,16 +409,16 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 KERNEL_VERSION_LIMIT=4.1
                 KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
                 if (($(echo "${KERNEL_CURRENT_VERSION} >= ${KERNEL_VERSION_LIMIT}" | bc -l))); then
-        if [ -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
-            rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
-        fi
+                    if [ -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
+                        rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
+                    fi
                     if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
                         echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
                         echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
                     fi
-        if [ -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
-            rm -f ${SYSTEM_TCP_BBR_LOAD_PATH}
-        fi
+                    if [ -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
+                        rm -f ${SYSTEM_TCP_BBR_LOAD_PATH}
+                    fi
                     if [ ! -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
                         modprobe tcp_bbr
                         echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
