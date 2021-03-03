@@ -366,79 +366,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # Mode
     shadowsocks-mode
 
-    function sysctl-install() {
-        if [ -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
-            rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
-        fi
-        if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
-            echo \
-            "fs.file-max = 51200
-net.core.rmem_max = 67108864
-net.core.wmem_max = 67108864
-net.core.netdev_max_backlog = 250000
-net.core.somaxconn = 4096
-net.ipv4.tcp_syncookies = 1
-net.ipv4.tcp_tw_reuse = 1
-net.ipv4.tcp_fin_timeout = 30
-net.ipv4.tcp_keepalive_time = 1200
-net.ipv4.ip_local_port_range = 10000 65000
-net.ipv4.tcp_max_syn_backlog = 8192
-net.ipv4.tcp_max_tw_buckets = 5000
-net.ipv4.tcp_fastopen = 3
-net.ipv4.tcp_mem = 25600 51200 102400
-net.ipv4.tcp_rmem = 4096 87380 67108864
-net.ipv4.tcp_wmem = 4096 65536 67108864
-net.ipv4.tcp_mtu_probing = 1
-net.ipv4.tcp_congestion_control = hybla" \
-            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-            sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
-        fi
-        if [ -f "${SYSTEM_LIMITS}" ]; then
-            rm -f ${SYSTEM_LIMITS}
-        fi
-        if [ ! -f "${SYSTEM_LIMITS}" ]; then
-            echo "* soft nofile 51200
-* hard nofile 51200
-root soft nofile 51200
-root hard nofile 51200" >>${SYSTEM_LIMITS}
-            sysctl -p "${SYSTEM_LIMITS}"
-        fi
-    }
-
-    sysctl-install
-
-    function install-bbr() {
-        if [ "${MODE_CHOICE}" == "tcp_only" ]; then
-            read -rp "Do You Want To Install TCP bbr (y/n): " -n 1 -r
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                KERNEL_VERSION_LIMIT=4.1
-                KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
-                if (($(echo "${KERNEL_CURRENT_VERSION} >= ${KERNEL_VERSION_LIMIT}" | bc -l))); then
-                    if [ -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
-                        rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
-                    fi
-                    if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
-                        echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                        echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                    fi
-                    if [ -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
-                        rm -f ${SYSTEM_TCP_BBR_LOAD_PATH}
-                    fi
-                    if [ ! -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
-                        modprobe tcp_bbr
-                        echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
-                        sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
-                    fi
-                else
-                    echo "Error: Please update your kernel to 4.1 or higher"
-                fi
-            fi
-        fi
-    }
-
-    # Install TCP BBR
-    install-bbr
-
     # Install shadowsocks Server
     function install-shadowsocks-server() {
         if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v socat)" ]; }; then
@@ -463,13 +390,10 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     function v2ray-installer() {
         if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
+            if [ -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
+                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
+            fi
             if [ ! -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
-                curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
-                tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
-                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
-                find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
-            else
-                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
                 curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
                 tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
                 rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
