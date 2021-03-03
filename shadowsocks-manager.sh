@@ -436,6 +436,28 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     # Install TCP BBR
     install-bbr
 
+    # Install shadowsocks Server
+    function install-shadowsocks-server() {
+        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v socat)" ]; }; then
+            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
+                apt-get update
+                apt-get install snapd haveged socat -y
+                snap install core shadowsocks-libev
+            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
+                dnf upgrade -y
+                dnf install epel-release -y
+                yum install snapd haveged socat -y
+                snap install core shadowsocks-libev
+            fi
+        fi
+        if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
+            ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
+        fi
+    }
+
+    # Install shadowsocks Server
+    install-shadowsocks-server
+
     function v2ray-installer() {
         if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
             if [ ! -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
@@ -484,28 +506,6 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     }
 
     v2ray-installer
-
-    # Install shadowsocks Server
-    function install-shadowsocks-server() {
-        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v socat)" ]; }; then
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update
-                apt-get install snapd haveged socat -y
-                snap install core shadowsocks-libev
-            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                dnf upgrade -y
-                dnf install epel-release -y
-                yum install snapd haveged socat -y
-                snap install core shadowsocks-libev
-            fi
-        fi
-        if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
-            ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
-        fi
-    }
-
-    # Install shadowsocks Server
-    install-shadowsocks-server
 
     function install-shadowsocks-service() {
         if [ -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
