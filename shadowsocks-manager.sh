@@ -465,7 +465,23 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     # Install shadowsocks Server
     install-shadowsocks-server
     
-    function install-shadowsocks-service() 
+    function install-shadowsocks-service() {
+    if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
+    echo "[Unit]
+Description=Shadowsocks-Libev Server Service
+Documentation=man:ss-server(1)
+After=network-online.target
+    
+[Service]
+Type=simple
+ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH}
+    
+[Install]
+WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
+    fi
+    }
+    
+    install-shadowsocks-service
 
     function shadowsocks-configuration() {
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
