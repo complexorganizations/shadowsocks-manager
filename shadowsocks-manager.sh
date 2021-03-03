@@ -451,8 +451,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
             fi
             if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
-                PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server"
+                PLUGIN_OPTS='"server"'
             elif { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 snap install core
@@ -473,7 +472,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     mv "${LETS_ENCRYPT_CERT_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}
                     mv "${LETS_ENCRYPT_KEY_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
                 fi
-                PLUGIN_OPTS="server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${SERVER_HOST}"
+                PLUGIN_OPTS='"server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${SERVER_HOST}"'
             fi
         fi
     }
