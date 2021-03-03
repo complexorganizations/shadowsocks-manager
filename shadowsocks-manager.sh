@@ -509,7 +509,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if { [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v socat)" ]; }; then
+        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v socat)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 apt-get update
                 apt-get install snapd haveged socat -y
@@ -520,12 +520,9 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 yum install snapd haveged socat -y
                 snap install core shadowsocks-libev
             fi
-            if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
-                ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
-            else
-                rm -f ${SHADOWSOCKS_BIN_PATH}
-                ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
-            fi
+        fi
+        if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
+            ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
         fi
     }
 
