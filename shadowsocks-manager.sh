@@ -311,33 +311,29 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         done
         case ${DISABLE_HOST_SETTINGS} in
         1)
-            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
-            else
+            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+            fi
+            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
                 echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
                 sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
             fi
             ;;
         2)
-            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
-            else
+            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+            fi
+            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
                 sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
             fi
             ;;
         3)
-            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
-            else
+            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+            fi
+            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
                 sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
             fi
@@ -366,6 +362,9 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     shadowsocks-mode
 
     function sysctl-install() {
+        if [ -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
+            rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
+        fi
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
                 "fs.file-max = 51200
@@ -388,38 +387,11 @@ net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla" \
                 >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
-        else
-            rm -f "${SHADOWSOCKS_TCP_BBR_PATH}"
-            echo \
-                "fs.file-max = 51200
-net.core.rmem_max = 67108864
-net.core.wmem_max = 67108864
-net.core.netdev_max_backlog = 250000
-net.core.somaxconn = 4096
-net.ipv4.tcp_syncookies = 1
-net.ipv4.tcp_tw_reuse = 1
-net.ipv4.tcp_fin_timeout = 30
-net.ipv4.tcp_keepalive_time = 1200
-net.ipv4.ip_local_port_range = 10000 65000
-net.ipv4.tcp_max_syn_backlog = 8192
-net.ipv4.tcp_max_tw_buckets = 5000
-net.ipv4.tcp_fastopen = 3
-net.ipv4.tcp_mem = 25600 51200 102400
-net.ipv4.tcp_rmem = 4096 87380 67108864
-net.ipv4.tcp_wmem = 4096 65536 67108864
-net.ipv4.tcp_mtu_probing = 1
-net.ipv4.tcp_congestion_control = hybla" \
-                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-            sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
+        fi
+        if [ -f "${SYSTEM_LIMITS}" ]; then
+            rm -f ${SYSTEM_LIMITS}
         fi
         if [ ! -f "${SYSTEM_LIMITS}" ]; then
-            echo "* soft nofile 51200
-* hard nofile 51200
-root soft nofile 51200
-root hard nofile 51200" >>${SYSTEM_LIMITS}
-            sysctl -p "${SYSTEM_LIMITS}"
-        else
-            rm -f ${SYSTEM_LIMITS}
             echo "* soft nofile 51200
 * hard nofile 51200
 root soft nofile 51200
@@ -437,20 +409,17 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 KERNEL_VERSION_LIMIT=4.1
                 KERNEL_CURRENT_VERSION=$(uname -r | cut -c1-3)
                 if (($(echo "${KERNEL_CURRENT_VERSION} >= ${KERNEL_VERSION_LIMIT}" | bc -l))); then
+        if [ -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
+            rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
+        fi
                     if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
                         echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
                         echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                    else
-                        rm -f ${SHADOWSOCKS_TCP_BBR_PATH}
-                        echo "net.core.default_qdisc=fq" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
-                        echo "net.ipv4.tcp_congestion_control=bbr" >>"${SHADOWSOCKS_TCP_BBR_PATH}"
                     fi
+        if [ -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
+            rm -f ${SYSTEM_TCP_BBR_LOAD_PATH}
+        fi
                     if [ ! -f "${SYSTEM_TCP_BBR_LOAD_PATH}" ]; then
-                        modprobe tcp_bbr
-                        echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
-                        sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
-                    else
-                        rm -f ${SYSTEM_TCP_BBR_LOAD_PATH}
                         modprobe tcp_bbr
                         echo "tcp_bbr" >>${SYSTEM_TCP_BBR_LOAD_PATH}
                         sysctl -p ${SYSTEM_TCP_BBR_LOAD_PATH}
@@ -530,6 +499,9 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     install-shadowsocks-server
 
     function install-shadowsocks-service() {
+        if [ -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
+            rm -f ${SHADOWSOCKS_SERVICE_PATH}
+        fi
         if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
             echo "[Unit]
 Description=Shadowsocks Service
@@ -548,6 +520,9 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
     install-shadowsocks-service
 
     function shadowsocks-configuration() {
+        if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
+            rm -f ${SHADOWSOCKS_CONFIG_PATH}
+        fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
