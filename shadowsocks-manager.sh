@@ -139,7 +139,7 @@ CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 V2RAY_DOWNLOAD="https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 V2RAY_PLUGIN_PATH="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 
-if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
+if [ ! -f "${SHADOWSOCKS_CONFIG_PATH }" ]; then
 
     # Question 1: Determine host port
     function set-port() {
@@ -464,23 +464,23 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     # Install shadowsocks Server
     install-shadowsocks-server
-    
+
     function install-shadowsocks-service() {
-    if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
-    echo "[Unit]
+        if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
+            echo "[Unit]
 Description=Shadowsocks-Libev Server Service
 Documentation=man:ss-server(1)
 After=network-online.target
-    
+
 [Service]
 Type=simple
 ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH}
-    
+
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
-    fi
+        fi
     }
-    
+
     install-shadowsocks-service
 
     function shadowsocks-configuration() {
@@ -562,14 +562,14 @@ else
                 snap remove --purge shadowsocks-libev -y
                 yum remove snapd -y
             fi
-            if [ -d "${SHADOWSOCK_PATH}" ]; then
-                rm -rf "${SHADOWSOCK_PATH}"
+            if [ -d "${SHADOWSOCKS_PATH}" ]; then
+                rm -rf "${SHADOWSOCKS_PATH}"
             fi
             if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_COMMON_PATH}"
             fi
-            if [ -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
-                rm -f "${SHADOWSOCK_CONFIG_PATH}"
+            if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
+                rm -f "${SHADOWSOCKS_CONFIG_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
