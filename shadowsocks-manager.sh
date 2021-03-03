@@ -549,9 +549,6 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
     install-shadowsocks-service
 
     function shadowsocks-configuration() {
-        if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-            mkdir -p ${SHADOWSOCKS_COMMON_PATH}
-        fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
