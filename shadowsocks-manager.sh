@@ -501,10 +501,10 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
         fi
         if pgrep systemd-journal; then
             systemctl enable shadowsocks-libev
-            systemctl restart shadowsocks-libev
+            systemctl start shadowsocks-libev
         else
             service shadowsocks-libev enable
-            service shadowsocks-libev restart
+            service shadowsocks-libev start
         fi
     }
 
