@@ -448,15 +448,15 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if { [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v qr)" ] || [ ! -x "$(command -v socat)" ]; }; then
+        if { [ ! -x "$(command -v shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v socat)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 apt-get update
-                apt-get install snapd haveged python3-qrcode socat -y
+                apt-get install snapd haveged socat -y
                 snap install core shadowsocks-libev
             elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
                 dnf upgrade -y
                 dnf install epel-release -y
-                yum install snapd haveged socat python3-qrcode -y
+                yum install snapd haveged socat -y
                 snap install core shadowsocks-libev
             fi
         fi
@@ -512,7 +512,6 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
     shadowsocks-configuration
 
     function show-config() {
-        echo -n ss://"$(echo -n "${ENCRYPTION_CHOICE}":"${PASSWORD_CHOICE}"@"${SERVER_HOST}":"${SERVER_PORT}" | base64)" | qr
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
         echo "Shadowsocks Server IP: ${SERVER_HOST}"
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
