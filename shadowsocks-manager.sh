@@ -477,7 +477,7 @@ ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
-        systemctl daemon-reload
+            systemctl daemon-reload
         fi
     }
 
