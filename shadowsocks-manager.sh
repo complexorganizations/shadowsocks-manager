@@ -368,7 +368,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     function sysctl-install() {
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
-            'fs.file-max = 51200
+                'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -386,12 +386,12 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         else
             rm -f "${SHADOWSOCKS_TCP_BBR_PATH}"
             echo \
-            'fs.file-max = 51200
+                'fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -409,7 +409,7 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla' \
-            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         fi
         if [ ! -f "${SYSTEM_LIMITS}" ]; then
@@ -486,10 +486,10 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 snap install core
                 snap refresh core
-            if [ ! -x "$(command -v certbot)" ]; then
-                snap install --classic certbot
-                ln -s /snap/bin/certbot /usr/bin/certbot
-            fi
+                if [ ! -x "$(command -v certbot)" ]; then
+                    snap install --classic certbot
+                    ln -s /snap/bin/certbot /usr/bin/certbot
+                fi
                 certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
                 certbot renew --dry-run
                 PLUGIN_CHOICE="v2ray-plugin"
