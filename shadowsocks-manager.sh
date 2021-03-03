@@ -558,6 +558,9 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
         echo "Shadowsocks Server IP: ${SERVER_HOST}"
+        if [ -n "${DOMAIN_NAME}" ]; then
+            echo "Shadowsocks Server Domain: ${DOMAIN_NAME}"
+        fi
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
