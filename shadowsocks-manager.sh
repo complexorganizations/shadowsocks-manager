@@ -369,7 +369,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         fi
         if [ ! -f "${SHADOWSOCKS_TCP_BBR_PATH}" ]; then
             echo \
-                "fs.file-max = 51200
+            "fs.file-max = 51200
 net.core.rmem_max = 67108864
 net.core.wmem_max = 67108864
 net.core.netdev_max_backlog = 250000
@@ -387,7 +387,7 @@ net.ipv4.tcp_rmem = 4096 87380 67108864
 net.ipv4.tcp_wmem = 4096 65536 67108864
 net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_congestion_control = hybla" \
-                >>"${SHADOWSOCKS_TCP_BBR_PATH}"
+            >>"${SHADOWSOCKS_TCP_BBR_PATH}"
             sysctl -p "${SHADOWSOCKS_TCP_BBR_PATH}"
         fi
         if [ -f "${SYSTEM_LIMITS}" ]; then
@@ -451,7 +451,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                 find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
             fi
             if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
-                PLUGIN_OPTS='"server"'
+                PLUGIN_OPTS="server"
             elif { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
                 snap install core
@@ -468,11 +468,17 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos -m support@"${DOMAIN_NAME}"
                     certbot renew --dry-run
                 fi
-                if { [ -f "${LETS_ENCRYPT_CERT_PATH}" ] || [ -f "${LETS_ENCRYPT_KEY_PATH}" ]; }; then
-                    mv "${LETS_ENCRYPT_CERT_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}
-                    mv "${LETS_ENCRYPT_KEY_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
+                if [ -f "${LETS_ENCRYPT_CERT_PATH}" ]; then
+                    if [ ! -f "${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}" ]; then
+                        mv "${LETS_ENCRYPT_CERT_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}
+                    fi
                 fi
-                PLUGIN_OPTS='"server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${SERVER_HOST}"'
+                if [ -f "${LETS_ENCRYPT_KEY_PATH}" ]; then
+                    if [ ! -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}" ]; then
+                        mv "${LETS_ENCRYPT_KEY_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
+                    fi
+                fi
+                PLUGIN_OPTS="server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${SERVER_HOST}"
             fi
         fi
     }
@@ -643,6 +649,12 @@ else
             fi
             if [ -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
                 rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
+            fi
+            if [ -f "${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}" ]; then
+                rm -f "${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}"
+            fi
+            if [ -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}" ]; then
+                rm -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}"
             fi
             ;;
         6) # Update the script
