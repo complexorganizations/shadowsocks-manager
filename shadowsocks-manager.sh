@@ -365,7 +365,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server)" ] || [ ! -x "$(command -v socat)" ] || || [ ! -x "$(command -v snap)" ] || || [ ! -x "$(command -v haveged)" ]; }; then
+        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server)" ] || [ ! -x "$(command -v socat)" ] || [ ! -x "$(command -v snap)" ] || [ ! -x "$(command -v haveged)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 apt-get update
                 apt-get install snapd haveged socat -y
