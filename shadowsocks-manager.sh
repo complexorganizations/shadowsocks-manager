@@ -474,7 +474,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     mv "${LETS_ENCRYPT_KEY_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
                 fi
                 PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server;tls;cert=${LETS_ENCRYPT_CERT_PATH};key=${LETS_ENCRYPT_KEY_PATH};host=${DOMAIN_NAME}"
+                PLUGIN_OPTS="server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${DOMAIN_NAME}"
             fi
         fi
     }
