@@ -473,8 +473,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
                     mv "${LETS_ENCRYPT_CERT_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}
                     mv "${LETS_ENCRYPT_KEY_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
                 fi
-                PLUGIN_CHOICE="v2ray-plugin"
-                PLUGIN_OPTS="server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${DOMAIN_NAME}"
+                PLUGIN_OPTS="server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${SERVER_HOST}"
             fi
         fi
     }
@@ -514,7 +513,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} -p ${SERVER_PORT} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
+ExecStart=shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts ${PLUGIN_OPTS}
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
