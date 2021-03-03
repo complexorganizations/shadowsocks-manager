@@ -426,8 +426,8 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
             curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
             tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}"
             rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
-            #find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
-            mv ${SHADOWSOCKS_COMMON_PATH}/v2ray-* ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin
+            find "$SHADOWSOCKS_COMMON_PATH" -name "v2ray*" -exec mv {} "$SHADOWSOCKS_COMMON_PATH"/v2ray-plugin \;
+            # mv ${SHADOWSOCKS_COMMON_PATH}/v2ray-* ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin
             if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
                 PLUGIN_CHOICE="v2ray-plugin"
                 PLUGIN_OPTS="server"
