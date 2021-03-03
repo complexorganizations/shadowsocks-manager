@@ -367,7 +367,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server --help)" ] || [ ! -x "$(command -v socat)" ]; }; then
+        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server)" ] || [ ! -x "$(command -v socat)" ] || || [ ! -x "$(command -v snap)" ] || || [ ! -x "$(command -v haveged)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 apt-get update
                 apt-get install snapd haveged socat -y
@@ -402,8 +402,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
                 PLUGIN_OPTS="server"
             elif { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
                 read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                snap install core
-                snap refresh core
                 if [ ! -x "$(command -v snap run certbot)" ]; then
                     snap install --classic certbot
                 fi
