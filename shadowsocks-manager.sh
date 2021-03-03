@@ -126,10 +126,11 @@ function headless-install() {
 # No GUI
 headless-install
 
-SHADOWSOCK_PATH="/var/snap/shadowsocks-libev"
-SHADOWSOCKS_COMMON_PATH="${SHADOWSOCK_PATH}/common/etc/shadowsocks-libev"
-SHADOWSOCK_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
-SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks.conf"
+SHADOWSOCKS_PATH="/var/snap/shadowsocks-libev"
+SHADOWSOCKS_COMMON_PATH="${SHADOWSOCKS_PATH}/common/etc/shadowsocks-libev"
+SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
+SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-libev.service"
+SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks-libev.conf"
 SHADOWSOCKS_TCP_BBR_PATH="/etc/sysctl.conf"
 SYSTEM_LIMITS="/etc/security/limits.conf"
 SYSTEM_TCP_BBR_LOAD_PATH="/etc/modules-load.d/modules.conf"
@@ -138,7 +139,7 @@ CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
 V2RAY_DOWNLOAD="https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 V2RAY_PLUGIN_PATH="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 
-if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
+if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Question 1: Determine host port
     function set-port() {
@@ -464,11 +465,29 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
     # Install shadowsocks Server
     install-shadowsocks-server
 
+    function install-shadowsocks-service() {
+        if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
+            echo "[Unit]
+Description=Shadowsocks Service
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/snap run shadowsocks-libev.ss-server
+
+[Install]
+WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
+            systemctl daemon-reload
+        fi
+    }
+
+    install-shadowsocks-service
+
     function shadowsocks-configuration() {
         if [ ! -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
             mkdir -p ${SHADOWSOCKS_COMMON_PATH}
         fi
-        if [ ! -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
+        if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             # shellcheck disable=SC1078,SC1079
             echo "{
   ""\"server""\":""\"${SERVER_HOST}""\",
@@ -478,9 +497,15 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
   ""\"method""\":""\"${ENCRYPTION_CHOICE}""\",
   ""\"plugin""\":""\"$PLUGIN_CHOICE""\",
   ""\"plugin_opts""\":""\"$PLUGIN_OPTS""\"
-}" >>${SHADOWSOCK_CONFIG_PATH}
+}" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
-        snap run shadowsocks-libev.ss-server &
+        if pgrep systemd-journal; then
+            systemctl enable shadowsocks-libev
+            systemctl restart shadowsocks-libev
+        else
+            service shadowsocks-libev enable
+            service shadowsocks-libev restart
+        fi
     }
 
     # Shadowsocks Config
@@ -488,7 +513,7 @@ root hard nofile 51200" >>${SYSTEM_LIMITS}
 
     function show-config() {
         echo -n ss://"$(echo -n "${ENCRYPTION_CHOICE}":"${PASSWORD_CHOICE}"@"${SERVER_HOST}":"${SERVER_PORT}" | base64)" | qr
-        echo "Config File ---> ${SHADOWSOCK_CONFIG_PATH}"
+        echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
         echo "Shadowsocks Server IP: ${SERVER_HOST}"
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
@@ -510,26 +535,43 @@ else
         echo "   3) Restart ShadowSocks"
         echo "   4) Show Config"
         echo "   5) Uninstall ShadowSocks"
-        echo "   6) Reinstall ShadowSocks"
-        echo "   7) Update this script"
-        until [[ "${SHADOWSOCKS_OPTIONS}" =~ ^[1-7]$ ]]; do
-            read -rp "Select an Option [1-7]: " -e -i 1 SHADOWSOCKS_OPTIONS
+        echo "   6) Update this script"
+        until [[ "${SHADOWSOCKS_OPTIONS}" =~ ^[1-6]$ ]]; do
+            read -rp "Select an Option [1-6]: " -e -i 1 SHADOWSOCKS_OPTIONS
         done
         case ${SHADOWSOCKS_OPTIONS} in
         1)
-            snap run shadowsocks-libev.ss-server &
+            if pgrep systemd-journal; then
+                systemctl start shadowsocks-libev
+            else
+                service shadowsocks-libev start
+            fi
             ;;
         2)
-            snap stop shadowsocks-libev.ss-server &
+            if pgrep systemd-journal; then
+                systemctl stop shadowsocks-libev
+            else
+                service shadowsocks-libev stop
+            fi
             ;;
         3)
-            snap restart shadowsocks-libev.ss-server &
+            if pgrep systemd-journal; then
+                systemctl restart shadowsocks-libev
+            else
+                service shadowsocks-libev restart
+            fi
             ;;
         4)
-            cat ${SHADOWSOCK_CONFIG_PATH}
+            cat ${SHADOWSOCKS_CONFIG_PATH}
             ;;
         5)
-            snap stop shadowsocks-libev.ss-server &
+            if pgrep systemd-journal; then
+                systemctl disable shadowsocks-libev
+                systemctl stop shadowsocks-libev
+            else
+                service shadowsocks-libev disable
+                service shadowsocks-libev stop
+            fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 snap remove --purge shadowsocks-libev -y
                 apt-get remove --purge snapd haveged -y
@@ -543,14 +585,14 @@ else
                 snap remove --purge shadowsocks-libev -y
                 yum remove snapd -y
             fi
-            if [ -d "${SHADOWSOCK_PATH}" ]; then
-                rm -rf "${SHADOWSOCK_PATH}"
+            if [ -d "${SHADOWSOCKS_PATH}" ]; then
+                rm -rf "${SHADOWSOCKS_PATH}"
             fi
             if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_COMMON_PATH}"
             fi
-            if [ -f "${SHADOWSOCK_CONFIG_PATH}" ]; then
-                rm -f "${SHADOWSOCK_CONFIG_PATH}"
+            if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
+                rm -f "${SHADOWSOCKS_CONFIG_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
@@ -565,18 +607,7 @@ else
                 rm -f "${V2RAY_PLUGIN_PATH}"
             fi
             ;;
-        6)
-            if pgrep systemd-journal; then
-                dpkg-reconfigure shadowsocks-libev
-                modprobe shadowsocks-libev
-                systemctl restart shadowsocks-libev
-            else
-                dpkg-reconfigure shadowsocks-libev
-                modprobe shadowsocks-libev
-                service shadowsocks-libev restart
-            fi
-            ;;
-        7) # Update the script
+        6) # Update the script
             CURRENT_FILE_PATH="$(realpath "$0")"
             if [ -f "${CURRENT_FILE_PATH}" ]; then
                 curl -o "${CURRENT_FILE_PATH}" ${SHADOWSOCKS_MANAGER_URL}
