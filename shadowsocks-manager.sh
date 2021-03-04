@@ -394,7 +394,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
                 curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
                 tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
                 rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
-                find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
+                # find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
             fi
             if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
                 PLUGIN_OPTS="server"
