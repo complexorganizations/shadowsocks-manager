@@ -481,9 +481,10 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
-        echo "Shadowsocks Server IP: ${SERVER_HOST}"
         if [ -n "${DOMAIN_NAME}" ]; then
             echo "Shadowsocks Server Domain: ${DOMAIN_NAME}"
+        else
+            echo "Shadowsocks Server IP: ${SERVER_HOST}"
         fi
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
@@ -506,8 +507,10 @@ else
         echo "   4) Show Config"
         echo "   5) Uninstall ShadowSocks"
         echo "   6) Update this script"
-        until [[ "${SHADOWSOCKS_OPTIONS}" =~ ^[1-6]$ ]]; do
-            read -rp "Select an Option [1-6]: " -e -i 1 SHADOWSOCKS_OPTIONS
+        echo "   7) Backup Config"
+        echo "   8) Restore Config"
+        until [[ "${SHADOWSOCKS_OPTIONS}" =~ ^[1-8]$ ]]; do
+            read -rp "Select an Option [1-8]: " -e -i 1 SHADOWSOCKS_OPTIONS
         done
         case ${SHADOWSOCKS_OPTIONS} in
         1)
