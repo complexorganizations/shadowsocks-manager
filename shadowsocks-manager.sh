@@ -580,14 +580,14 @@ else
             if [ -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}"
             fi
-        if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
-          read -rp "Do you really want to remove ShadowSocks Backup? (y/n): " -n 1 -r
-          if [[ $REPLY =~ ^[Yy]$ ]]; then
-            rm -f ${SHADOWSOCKS_BACKUP_PATH}
-          elif [[ $REPLY =~ ^[Nn]$ ]]; then
-            exit
-          fi
-        fi
+            if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
+                read -rp "Do you really want to remove ShadowSocks Backup? (y/n): " -n 1 -r
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    rm -f ${SHADOWSOCKS_BACKUP_PATH}
+                elif [[ $REPLY =~ ^[Nn]$ ]]; then
+                    exit
+                fi
+            fi
             ;;
         6) # Update the script
             CURRENT_FILE_PATH="$(realpath "$0")"
@@ -597,26 +597,26 @@ else
             fi
             ;;
         7)
-          if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-            if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
-              rm -f ${SHADOWSOCKS_BACKUP_PATH}
+            if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
+                if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
+                    rm -f ${SHADOWSOCKS_BACKUP_PATH}
+                fi
+                if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
+                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} ${SHADOWSOCKS_SERVICE_PATH} ${SHADOWSOCKS_IP_FORWARDING_PATH} ${SHADOWSOCKS_BIN_PATH} ${SHADOWSOCKS_BIN_PATH} ${V2RAY_PLUGIN_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
+                else
+                    exit
+                fi
             fi
-            if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-              zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} ${SHADOWSOCKS_SERVICE_PATH} ${SHADOWSOCKS_IP_FORWARDING_PATH} ${SHADOWSOCKS_BIN_PATH} ${SHADOWSOCKS_BIN_PATH} ${V2RAY_PLUGIN_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
-            else
-              exit
-            fi
-          fi
             ;;
         8)
-        if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-          rm -rf ${SHADOWSOCKS_COMMON_PATH}
-        fi
-          if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-            unzip ${SHADOWSOCKS_CONFIG_PATH} -d ${SHADOWSOCKS_COMMON_PATH}
-          else
-            exit
-          fi
+            if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
+                rm -rf ${SHADOWSOCKS_COMMON_PATH}
+            fi
+            if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
+                unzip ${SHADOWSOCKS_CONFIG_PATH} -d ${SHADOWSOCKS_COMMON_PATH}
+            else
+                exit
+            fi
             if pgrep systemd-journal; then
                 systemctl restart shadowsocks-libev
             else
