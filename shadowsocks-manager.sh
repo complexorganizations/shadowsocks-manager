@@ -411,6 +411,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
                 fi
                 if { [ ! -f "${LETS_ENCRYPT_CERT_PATH}" ] && [ ! -f "${LETS_ENCRYPT_KEY_PATH}" ]; }; then
                     certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos --register-unsafely-without-email
+                    sleep 15
                     certbot renew --dry-run
                 fi
                 if [ -f "${LETS_ENCRYPT_CERT_PATH}" ]; then
