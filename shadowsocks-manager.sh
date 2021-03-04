@@ -145,6 +145,7 @@ SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH="${SHADOWSOCKS_COMMON_PATH}/fullchain.pem"
 LETS_ENCRYPT_KEY_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem"
 SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH="${SHADOWSOCKS_COMMON_PATH}/privkey.pem"
 SERVER_INPUT_IP="0.0.0.0"
+SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
 
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
@@ -481,9 +482,10 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
-        echo "Shadowsocks Server IP: ${SERVER_HOST}"
         if [ -n "${DOMAIN_NAME}" ]; then
             echo "Shadowsocks Server Domain: ${DOMAIN_NAME}"
+        else
+            echo "Shadowsocks Server IP: ${SERVER_HOST}"
         fi
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
@@ -506,8 +508,10 @@ else
         echo "   4) Show Config"
         echo "   5) Uninstall ShadowSocks"
         echo "   6) Update this script"
-        until [[ "${SHADOWSOCKS_OPTIONS}" =~ ^[1-6]$ ]]; do
-            read -rp "Select an Option [1-6]: " -e -i 1 SHADOWSOCKS_OPTIONS
+        echo "   7) Backup Config"
+        echo "   8) Restore Config"
+        until [[ "${SHADOWSOCKS_OPTIONS}" =~ ^[1-8]$ ]]; do
+            read -rp "Select an Option [1-8]: " -e -i 1 SHADOWSOCKS_OPTIONS
         done
         case ${SHADOWSOCKS_OPTIONS} in
         1)
@@ -576,12 +580,47 @@ else
             if [ -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}"
             fi
+            if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
+                read -rp "Do you really want to remove ShadowSocks Backup? (y/n): " -n 1 -r
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    rm -f ${SHADOWSOCKS_BACKUP_PATH}
+                elif [[ $REPLY =~ ^[Nn]$ ]]; then
+                    exit
+                fi
+            fi
             ;;
         6) # Update the script
             CURRENT_FILE_PATH="$(realpath "$0")"
             if [ -f "${CURRENT_FILE_PATH}" ]; then
                 curl -o "${CURRENT_FILE_PATH}" ${SHADOWSOCKS_MANAGER_URL}
                 chmod +x "${CURRENT_FILE_PATH}" || exit
+            fi
+            ;;
+        7)
+            if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
+                if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
+                    rm -f ${SHADOWSOCKS_BACKUP_PATH}
+                fi
+                if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
+                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} ${SHADOWSOCKS_SERVICE_PATH} ${SHADOWSOCKS_IP_FORWARDING_PATH} ${SHADOWSOCKS_BIN_PATH} ${SHADOWSOCKS_BIN_PATH} ${V2RAY_PLUGIN_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
+                else
+                    exit
+                fi
+            fi
+            ;;
+        8)
+            if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
+                rm -rf ${SHADOWSOCKS_COMMON_PATH}
+            fi
+            if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
+                unzip ${SHADOWSOCKS_CONFIG_PATH} -d ${SHADOWSOCKS_COMMON_PATH}
+            else
+                exit
+            fi
+            if pgrep systemd-journal; then
+                systemctl restart shadowsocks-libev
+            else
+                service shadowsocks-libev restart
             fi
             ;;
         esac
