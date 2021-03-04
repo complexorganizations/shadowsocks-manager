@@ -144,6 +144,7 @@ LETS_ENCRYPT_CERT_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem"
 SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH="${SHADOWSOCKS_COMMON_PATH}/fullchain.pem"
 LETS_ENCRYPT_KEY_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem"
 SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH="${SHADOWSOCKS_COMMON_PATH}/privkey.pem"
+SERVER_INPUT_IP="0.0.0.0"
 
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
@@ -456,7 +457,7 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
         fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
-  \"server\":\"${SERVER_HOST}\",
+  \"server\":\"${SERVER_INPUT_IP}\",
   \"mode\":\"${MODE_CHOICE}\",
   \"server_port\":\"${SERVER_PORT}\",
   \"password\":\"${PASSWORD_CHOICE}\",
