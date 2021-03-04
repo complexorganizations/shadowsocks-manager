@@ -2,7 +2,7 @@
 
 We strongly recommend that you use [WireGuard](https://github.com/complexorganizations/wireguard-manager) instead of Shadowsocks, but your best option is Shadowsocks if wireguard is blocked.
 
-***Archived***
+### ***Archived***
 
 ---
 ### Installation
