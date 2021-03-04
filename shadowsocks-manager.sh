@@ -134,10 +134,8 @@ SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks-libev.conf"
 SHADOWSOCKS_BIN_PATH="/usr/bin/shadowsocks-libev.ss-server"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
-if [ "${DISTRO}" == "raspbian" ]; then
-    if [ "${CHECK_ARCHITECTURE}" == "armhf" ]; then
-        CHECK_ARCHITECTURE="arm"
-    fi
+if { [ "${CHECK_ARCHITECTURE}" == "arm" ] || [ "${CHECK_ARCHITECTURE}" == "arm64" ] || [ "${CHECK_ARCHITECTURE}" == "armhf" ]; }; then
+    CHECK_ARCHITECTURE="arm"
 fi
 V2RAY_DOWNLOAD="https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
 V2RAY_PLUGIN_PATH_ZIPPED="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
