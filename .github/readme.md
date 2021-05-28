@@ -2,8 +2,6 @@
 
 We strongly recommend that you use [WireGuard](https://github.com/complexorganizations/wireguard-manager) instead of Shadowsocks, but your best option is Shadowsocks if wireguard is blocked.
 
-### ***Archived***
-
 ---
 ### Installation
 Lets first use `curl` and save the file in `/usr/local/bin/`
