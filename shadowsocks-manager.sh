@@ -432,27 +432,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     v2ray-installer
 
-    function install-shadowsocks-service() {
-        if [ -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
-            rm -f ${SHADOWSOCKS_SERVICE_PATH}
-        fi
-        if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
-            echo "[Unit]
-Description=Shadowsocks Service
-After=network-online.target
-
-[Service]
-Type=simple
-ExecStart=shadowsocks-libev.ss-server -c ${SHADOWSOCKS_CONFIG_PATH} --plugin ${V2RAY_PLUGIN_PATH} --plugin-opts \"${PLUGIN_OPTS}\"
-
-[Install]
-WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
-            systemctl daemon-reload
-        fi
-    }
-
-    install-shadowsocks-service
-
     function shadowsocks-configuration() {
         if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             rm -f ${SHADOWSOCKS_CONFIG_PATH}
@@ -479,6 +458,18 @@ WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
 
     # Shadowsocks Config
     shadowsocks-configuration
+
+    function install-shadowsocks-service() {
+        if pgrep systemd-journal; then
+            systemctl enable snap.shadowsocks-libev.ss-server-daemon.service
+            systemctl start snap.shadowsocks-libev.ss-server-daemon.service
+        else
+            service shadowsocks-libev snap.shadowsocks-libev.ss-server-daemon.service
+            service shadowsocks-libev snap.shadowsocks-libev.ss-server-daemon.service
+        fi
+    }
+
+    install-shadowsocks-service
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
