@@ -448,19 +448,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
         if pgrep systemd-journal; then
-            systemctl enable shadowsocks-libev
-            systemctl start shadowsocks-libev
-        else
-            service shadowsocks-libev enable
-            service shadowsocks-libev start
-        fi
-    }
-
-    # Shadowsocks Config
-    shadowsocks-configuration
-
-    function install-shadowsocks-service() {
-        if pgrep systemd-journal; then
             systemctl enable snap.shadowsocks-libev.ss-server-daemon.service
             systemctl start snap.shadowsocks-libev.ss-server-daemon.service
         else
@@ -469,7 +456,8 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         fi
     }
 
-    install-shadowsocks-service
+    # Shadowsocks Config
+    shadowsocks-configuration
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
@@ -507,23 +495,23 @@ else
         case ${SHADOWSOCKS_OPTIONS} in
         1)
             if pgrep systemd-journal; then
-                systemctl start shadowsocks-libev
+                systemctl start snap.shadowsocks-libev.ss-server-daemon.service
             else
-                service shadowsocks-libev start
+                service snap.shadowsocks-libev.ss-server-daemon.service start
             fi
             ;;
         2)
             if pgrep systemd-journal; then
-                systemctl stop shadowsocks-libev
+                systemctl stop snap.shadowsocks-libev.ss-server-daemon.service
             else
-                service shadowsocks-libev stop
+                service snap.shadowsocks-libev.ss-server-daemon.service stop
             fi
             ;;
         3)
             if pgrep systemd-journal; then
-                systemctl restart shadowsocks-libev
+                systemctl restart snap.shadowsocks-libev.ss-server-daemon.service
             else
-                service shadowsocks-libev restart
+                service snap.shadowsocks-libev.ss-server-daemon.service restart
             fi
             ;;
         4)
@@ -531,11 +519,11 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                systemctl disable shadowsocks-libev
-                systemctl stop shadowsocks-libev
+                systemctl disable snap.shadowsocks-libev.ss-server-daemon.service
+                systemctl stop snap.shadowsocks-libev.ss-server-daemon.service
             else
-                service shadowsocks-libev disable
-                service shadowsocks-libev stop
+                service snap.shadowsocks-libev.ss-server-daemon.service disable
+                service snap.shadowsocks-libev.ss-server-daemon.service stop
             fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 snap remove --purge shadowsocks-libev -y
@@ -609,9 +597,9 @@ else
                 exit
             fi
             if pgrep systemd-journal; then
-                systemctl restart shadowsocks-libev
+                systemctl restart snap.shadowsocks-libev.ss-server-daemon.service
             else
-                service shadowsocks-libev restart
+                service snap.shadowsocks-libev.ss-server-daemon.service restart
             fi
             ;;
         esac
