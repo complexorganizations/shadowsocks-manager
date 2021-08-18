@@ -27,11 +27,11 @@ dist-check
 # Pre-Checks system requirements
 function installing-system-requirements() {
     if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ]; }; then
+        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep awk ip -y
+                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep awk ip haveged -y
             elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                yum update -y && yum install epel-release curl bc jq sed zip unzip grep awk ip -y
+                yum update -y && yum install epel-release curl bc jq sed zip unzip grep awk ip haveged -y
             fi
         fi
     else
@@ -113,13 +113,11 @@ function headless-install() {
         PORT_CHOICE_SETTINGS=${IPV4_SUBNET_SETTINGS:-1}
         PASSWORD_CHOICE_SETTINGS=${IPV6_SUBNET_SETTINGS:-1}
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
-        TIMEOUT_CHOICE_SETTINGS=${TIMEOUT_CHOICE_SETTINGS:-1}
         SERVER_HOST_V4_SETTINGS=${SERVER_HOST_V4_SETTINGS:-1}
         SERVER_HOST_V6_SETTINGS=${SERVER_HOST_V6_SETTINGS:-1}
         SERVER_HOST_SETTINGS=${SERVER_HOST_SETTINGS:-1}
         DISABLE_HOST_SETTINGS=${DISABLE_HOST_SETTINGS:-1}
         MODE_CHOICE_SETTINGS=${MODE_CHOICE_SETTINGS:-1}
-        INSTALL_BBR=${INSTALL_BBR:-y}
     fi
 }
 
@@ -371,16 +369,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         if [ ! -x "$(command -v rustup)" ]; then
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
             rustup default nightly
-        fi
-        if { [ ! -x "$(command -v ssserver)" ] || [ ! -x "$(command -v haveged)" ]; }; then
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update
-                apt-get install haveged -y
-                cargo install shadowsocks-rust
-            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                dnf upgrade -y
-                dnf install epel-release -y
-                yum install haveged -y
+            if [ ! -x "$(command -v ssserver)" ]; then
                 cargo install shadowsocks-rust
             fi
         fi
@@ -390,9 +379,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     install-shadowsocks-server
 
     function shadowsocks-configuration() {
-        if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-            rm -f ${SHADOWSOCKS_CONFIG_PATH}
-        fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
   \"server\":\"${SERVER_INPUT_IP}\",
