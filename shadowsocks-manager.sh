@@ -401,7 +401,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Server Mode: ${MODE_CHOICE}"
-        echo "Shadowsocks URI: ss://${MODE_CHOICE}:${PASSWORD_CHOICE}@${SERVER_INPUT_IP}:${SERVER_PORT} | base64"
+        echo "Shadowsocks URI: ss://${MODE_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST_V4}:${SERVER_PORT} | base64"
     }
 
     # Show the config
