@@ -315,30 +315,30 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         case ${DISABLE_HOST_SETTINGS} in
         1)
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             ;;
         2)
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             ;;
         3)
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             ;;
         esac
@@ -429,23 +429,23 @@ else
         case ${SHADOWSOCKS_OPTIONS} in
         1)
             if pgrep systemd-journal; then
-                #
+                echo "hello"
             else
-                #
+                echo "hello"
             fi
             ;;
         2)
             if pgrep systemd-journal; then
-                #
+                echo "hello"
             else
-                #
+                echo "hello"
             fi
             ;;
         3)
             if pgrep systemd-journal; then
-                #
+                echo "hello"
             else
-                #
+                echo "hello"
             fi
             ;;
         4)
@@ -453,14 +453,14 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                #
+                echo "hello"
             else
-                #
+                echo "hello"
             fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                #
+                echo "hello"
             elif { [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                #
+                echo "hello"
             fi
             if [ -d "${SHADOWSOCKS_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_PATH}"
@@ -493,7 +493,7 @@ else
                     rm -f ${SHADOWSOCKS_BACKUP_PATH}
                 fi
                 if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} "${SHADOWSOCKS_IP_FORWARDING_PATH}"
                 else
                     exit
                 fi
@@ -501,17 +501,17 @@ else
             ;;
         8)
             if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-                rm -rf ${SHADOWSOCKS_COMMON_PATH}
+                rm -rf "${SHADOWSOCKS_COMMON_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-                unzip ${SHADOWSOCKS_CONFIG_PATH} -d ${SHADOWSOCKS_COMMON_PATH}
+                unzip ${SHADOWSOCKS_CONFIG_PATH} -d "${SHADOWSOCKS_COMMON_PATH}"
             else
                 exit
             fi
             if pgrep systemd-journal; then
-                #
+                echo "hello"
             else
-                #
+                echo "hello"
             fi
             ;;
         esac
