@@ -116,7 +116,6 @@ function headless-install() {
         SERVER_HOST_V4_SETTINGS=${SERVER_HOST_V4_SETTINGS:-1}
         SERVER_HOST_V6_SETTINGS=${SERVER_HOST_V6_SETTINGS:-1}
         SERVER_HOST_SETTINGS=${SERVER_HOST_SETTINGS:-1}
-        DISABLE_HOST_SETTINGS=${DISABLE_HOST_SETTINGS:-1}
         MODE_CHOICE_SETTINGS=${MODE_CHOICE_SETTINGS:-1}
     fi
 }
@@ -351,14 +350,12 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     shadowsocks-configuration
 
     function show-config() {
-        SHADOWSOCKS_URI_GENERATOR=$(${ENCRYPTION_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST}:${SERVER_PORT} | base64)
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
         echo "Shadowsocks Server IP: ${SERVER_HOST}"
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Server Mode: ${MODE_CHOICE}"
-        echo "Shadowsocks URI: ss://${SHADOWSOCKS_URI_GENERATOR}"
     }
 
     # Show the config
