@@ -322,9 +322,9 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             curl https://sh.rustup.rs -sSf | sh -s -- -y
             source ${HOME}/.cargo/env
             rustup default nightly
-            if [ ! -x "$(command -v ssserver)" ]; then
-                cargo install shadowsocks-rust
-            fi
+        fi
+        if [ ! -x "$(command -v ssserver)" ]; then
+            cargo install shadowsocks-rust
         fi
     }
 
