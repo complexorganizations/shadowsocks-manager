@@ -123,12 +123,14 @@ function headless-install() {
 # No GUI
 headless-install
 
+# Global variable
 SHADOWSOCKS_PATH="/etc/shadowsocks"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 SERVER_INPUT_IP="0.0.0.0"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
 
+# Shadowsocks Config
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Question 1: Determine host port
@@ -344,6 +346,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
   \"method\":\"${ENCRYPTION_CHOICE}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
+        # Shadowsocks start as daemon
         ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
     }
 
@@ -351,13 +354,14 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     shadowsocks-configuration
 
     function show-config() {
-        SHADOWSOCKS_URI_GENERATOR=$(echo ${ENCRYPTION_CHOICE}:"${PASSWORD_CHOICE}"@"${SERVER_HOST}":${SERVER_PORT} | base64)
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
         echo "Shadowsocks IP: ${SERVER_HOST}"
         echo "Shadowsocks Port: ${SERVER_PORT}"
         echo "Shadowsocks Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Mode: ${MODE_CHOICE}"
+        # shellcheck disable=SC2086
+        SHADOWSOCKS_URI_GENERATOR=$(echo ${ENCRYPTION_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST}:${SERVER_PORT} | base64)
         echo "Shadowsocks URI: ss://${SHADOWSOCKS_URI_GENERATOR}#${SERVER_HOST}"
     }
 
