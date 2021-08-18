@@ -376,6 +376,9 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     install-shadowsocks-server
 
     function shadowsocks-configuration() {
+    if [ ! -d "${SHADOWSOCKS_PATH}" ]; then
+    mkdir -p ${SHADOWSOCKS_PATH}
+    fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
   \"server\":\"${SERVER_INPUT_IP}\",
