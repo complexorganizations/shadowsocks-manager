@@ -316,7 +316,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
                 echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
-                sysctl -p "${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p
             fi
             ;;
         2)
@@ -325,7 +325,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
-                sysctl -p "${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p
             fi
             ;;
         3)
@@ -334,7 +334,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
-                sysctl -p "${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p
             fi
             ;;
         esac
