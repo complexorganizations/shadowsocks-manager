@@ -351,13 +351,14 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     shadowsocks-configuration
 
     function show-config() {
+        SHADOWSOCKS_URI_GENERATOR=$(${ENCRYPTION_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST}:${SERVER_PORT} | base64)
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
         echo "Shadowsocks Server IP: ${SERVER_HOST}"
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Server Mode: ${MODE_CHOICE}"
-        # echo "Shadowsocks URI: ss://${MODE_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST_V4}:${SERVER_PORT} | base64"
+        echo "Shadowsocks URI: ss://${SHADOWSOCKS_URI_GENERATOR}"
     }
 
     # Show the config
