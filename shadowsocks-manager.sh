@@ -363,7 +363,8 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # Install shadowsocks Server
     function install-shadowsocks-server() {
         if [ ! -x "$(command -v rustup)" ]; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
             rustup default nightly
             if [ ! -x "$(command -v ssserver)" ]; then
                 cargo install shadowsocks-rust
