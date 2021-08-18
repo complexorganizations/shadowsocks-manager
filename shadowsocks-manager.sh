@@ -401,7 +401,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Server Mode: ${MODE_CHOICE}"
-        echo "Shadowsocks URI: ss://${MODE_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST_V4}:${SERVER_PORT} | base64"
+        # echo "Shadowsocks URI: ss://${MODE_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST_V4}:${SERVER_PORT} | base64"
     }
 
     # Show the config
@@ -427,23 +427,23 @@ else
         case ${SHADOWSOCKS_OPTIONS} in
         1)
             if pgrep systemd-journal; then
-                echo "hello"
+                echo "Update comming soon!"
             else
-                echo "hello"
+                echo "Update comming soon!"
             fi
             ;;
         2)
             if pgrep systemd-journal; then
-                echo "hello"
+                echo "Update comming soon!"
             else
-                echo "hello"
+                echo "Update comming soon!"
             fi
             ;;
         3)
             if pgrep systemd-journal; then
-                echo "hello"
+                echo "Update comming soon!"
             else
-                echo "hello"
+                echo "Update comming soon!"
             fi
             ;;
         4)
@@ -451,14 +451,14 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                echo "hello"
+                echo "Update comming soon!"
             else
-                echo "hello"
+                echo "Update comming soon!"
             fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                echo "hello"
+                echo "Update comming soon!"
             elif { [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                echo "hello"
+                echo "Update comming soon!"
             fi
             if [ -d "${SHADOWSOCKS_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_PATH}"
@@ -507,9 +507,9 @@ else
                 exit
             fi
             if pgrep systemd-journal; then
-                echo "hello"
+                echo "Update comming soon!"
             else
-                echo "hello"
+                echo "Update comming soon!"
             fi
             ;;
         esac
