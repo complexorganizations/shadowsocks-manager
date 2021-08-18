@@ -127,7 +127,6 @@ headless-install
 SHADOWSOCKS_PATH="/etc/shadowsocks"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
-SERVER_INPUT_IP="0.0.0.0"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
 
 # Shadowsocks Config
@@ -339,7 +338,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
-  \"server\":\"${SERVER_INPUT_IP}\",
+  \"server\":\"${SERVER_HOST}\",
   \"mode\":\"${MODE_CHOICE}\",
   \"server_port\":${SERVER_PORT},
   \"password\":\"${PASSWORD_CHOICE}\",
@@ -360,9 +359,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         echo "Shadowsocks Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Mode: ${MODE_CHOICE}"
-        # shellcheck disable=SC2086
-        SHADOWSOCKS_URI_GENERATOR=$(echo ${ENCRYPTION_CHOICE}:${PASSWORD_CHOICE} | base64)
-        echo "Shadowsocks URI: ss://${SHADOWSOCKS_URI_GENERATOR}@${SERVER_HOST}:${SERVER_PORT}#${SERVER_HOST}"
+        ssurl -c -e ${SHADOWSOCKS_CONFIG_PATH}
     }
 
     # Show the config
