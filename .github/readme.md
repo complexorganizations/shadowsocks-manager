@@ -24,7 +24,6 @@ bash /usr/local/bin/shadowsocks-manager.sh
 ### Features
 - Install Shadowsocks
 - Uninstall Shadowsocks
-- V2Ray Plugin
 
 ---
 ### Q&A
@@ -37,9 +36,6 @@ Why use V2Ray?
 
 Is shadowsocks safe?
 - Yes, all the code is completely open source.
-
-How does shadowsocks traffic look like?
-- It looks like normal http & https traffic.
 
 ---
 ### Author
