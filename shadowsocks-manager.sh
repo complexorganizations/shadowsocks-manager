@@ -361,8 +361,8 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Mode: ${MODE_CHOICE}"
         # shellcheck disable=SC2086
-        SHADOWSOCKS_URI_GENERATOR=$(echo ${ENCRYPTION_CHOICE}:${PASSWORD_CHOICE}@${SERVER_HOST}:${SERVER_PORT} | base64)
-        echo "Shadowsocks URI: ss://${SHADOWSOCKS_URI_GENERATOR}#${SERVER_HOST}"
+        SHADOWSOCKS_URI_GENERATOR=$(echo ${ENCRYPTION_CHOICE}:${PASSWORD_CHOICE} | base64)
+        echo "Shadowsocks URI: ss://${SHADOWSOCKS_URI_GENERATOR}@${SERVER_HOST}:${SERVER_PORT}#${SERVER_HOST}"
     }
 
     # Show the config
