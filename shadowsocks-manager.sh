@@ -319,6 +319,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     function install-shadowsocks-server() {
         if [ ! -x "$(command -v rustup)" ]; then
             curl https://sh.rustup.rs -sSf | sh -s -- -y
+            # shellcheck disable=SC2086,SC1091
             source ${HOME}/.cargo/env
             rustup default nightly
         fi
@@ -350,12 +351,14 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     shadowsocks-configuration
 
     function show-config() {
+        SHADOWSOCKS_URI_GENERATOR=$(echo ${ENCRYPTION_CHOICE}:"${PASSWORD_CHOICE}"@"${SERVER_HOST}":${SERVER_PORT} | base64)
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
-        echo "Shadowsocks Server IP: ${SERVER_HOST}"
-        echo "Shadowsocks Server Port: ${SERVER_PORT}"
-        echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
-        echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
-        echo "Shadowsocks Server Mode: ${MODE_CHOICE}"
+        echo "Shadowsocks IP: ${SERVER_HOST}"
+        echo "Shadowsocks Port: ${SERVER_PORT}"
+        echo "Shadowsocks Password: ${PASSWORD_CHOICE}"
+        echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
+        echo "Shadowsocks Mode: ${MODE_CHOICE}"
+        echo "Shadowsocks URI: ss://${SHADOWSOCKS_URI_GENERATOR}#${SERVER_HOST}"
     }
 
     # Show the config
