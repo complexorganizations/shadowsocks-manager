@@ -27,11 +27,11 @@ dist-check
 # Pre-Checks system requirements
 function installing-system-requirements() {
     if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ]; }; then
+        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update && apt-get install iptables curl coreutils bc jq sed e2fsprogs zip unzip grep gawk iproute2 hostname systemd -y
+                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep gawk iproute2 haveged -y
             elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                yum update -y && yum install epel-release iptables curl coreutils bc jq sed e2fsprogs zip unzip grep gawk iproute2 hostname systemd -y
+                yum update -y && yum install epel-release curl bc jq sed zip unzip grep gawk iproute2 haveged -y
             fi
         fi
     else
@@ -113,37 +113,20 @@ function headless-install() {
         PORT_CHOICE_SETTINGS=${IPV4_SUBNET_SETTINGS:-1}
         PASSWORD_CHOICE_SETTINGS=${IPV6_SUBNET_SETTINGS:-1}
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
-        TIMEOUT_CHOICE_SETTINGS=${TIMEOUT_CHOICE_SETTINGS:-1}
         SERVER_HOST_V4_SETTINGS=${SERVER_HOST_V4_SETTINGS:-1}
         SERVER_HOST_V6_SETTINGS=${SERVER_HOST_V6_SETTINGS:-1}
         SERVER_HOST_SETTINGS=${SERVER_HOST_SETTINGS:-1}
         DISABLE_HOST_SETTINGS=${DISABLE_HOST_SETTINGS:-1}
         MODE_CHOICE_SETTINGS=${MODE_CHOICE_SETTINGS:-1}
-        INSTALL_BBR=${INSTALL_BBR:-y}
     fi
 }
 
 # No GUI
 headless-install
 
-SHADOWSOCKS_PATH="/var/snap/shadowsocks-libev"
-SHADOWSOCKS_COMMON_PATH="${SHADOWSOCKS_PATH}/common/etc/shadowsocks-libev"
-SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_COMMON_PATH}/config.json"
-SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-libev.service"
-SHADOWSOCKS_IP_FORWARDING_PATH="/etc/sysctl.d/shadowsocks-libev.conf"
-SHADOWSOCKS_BIN_PATH="/usr/bin/shadowsocks-libev.ss-server"
+SHADOWSOCKS_PATH="/etc/shadowsocks"
+SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
-CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
-if { [ "${CHECK_ARCHITECTURE}" == "arm" ] || [ "${CHECK_ARCHITECTURE}" == "arm64" ] || [ "${CHECK_ARCHITECTURE}" == "armhf" ]; }; then
-    CHECK_ARCHITECTURE="arm"
-fi
-V2RAY_DOWNLOAD="https://github.com/shadowsocks/v2ray-plugin/releases/download/v1.3.1/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
-V2RAY_PLUGIN_PATH_ZIPPED="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin-linux-${CHECK_ARCHITECTURE}-v1.3.1.tar.gz"
-V2RAY_PLUGIN_PATH="${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin"
-LETS_ENCRYPT_CERT_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem"
-SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH="${SHADOWSOCKS_COMMON_PATH}/fullchain.pem"
-LETS_ENCRYPT_KEY_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem"
-SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH="${SHADOWSOCKS_COMMON_PATH}/privkey.pem"
 SERVER_INPUT_IP="0.0.0.0"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
 
@@ -212,24 +195,30 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # encryption
     shadowsocks-encryption
 
-    # Determine host port
+    # Get the IPv4
     function test-connectivity-v4() {
-        echo "How would you like to detect IPV4?"
+        echo "How would you like to detect IPv4?"
         echo "  1) Curl (Recommended)"
         echo "  2) IP (Advanced)"
         echo "  3) Custom (Advanced)"
         until [[ "${SERVER_HOST_V4_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "ipv4 choice [1-3]: " -e -i 1 SERVER_HOST_V4_SETTINGS
+            read -rp "IPv4 Choice [1-3]: " -e -i 1 SERVER_HOST_V4_SETTINGS
         done
         case ${SERVER_HOST_V4_SETTINGS} in
         1)
             SERVER_HOST_V4="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+            if [ -z "${SERVER_HOST_V4}" ]; then
+                echo "Error: Curl unable to locate your server's public IP address."
+            fi
             ;;
         2)
             SERVER_HOST_V4="$(ip route get 8.8.8.8 | grep src | sed 's/.*src \(.* \)/\1/g' | cut -f1 -d ' ')"
+            if [ -z "${SERVER_HOST_V4}" ]; then
+                echo "Error: IP unable to locate your server's public IP address."
+            fi
             ;;
         3)
-            read -rp "Custom IPV4: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V4
+            read -rp "Custom IPv4: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V4
             if [ -z "${SERVER_HOST_V4}" ]; then
                 SERVER_HOST_V4="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
             fi
@@ -237,27 +226,33 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         esac
     }
 
-    # Set Port
+    # Get the IPv4
     test-connectivity-v4
 
     # Determine ipv6
     function test-connectivity-v6() {
-        echo "How would you like to detect IPV6?"
+        echo "How would you like to detect IPv6?"
         echo "  1) Curl (Recommended)"
         echo "  2) IP (Advanced)"
         echo "  3) Custom (Advanced)"
         until [[ "${SERVER_HOST_V6_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "ipv6 choice [1-3]: " -e -i 1 SERVER_HOST_V6_SETTINGS
+            read -rp "IPv6 Choice [1-3]: " -e -i 1 SERVER_HOST_V6_SETTINGS
         done
         case ${SERVER_HOST_V6_SETTINGS} in
         1)
             SERVER_HOST_V6="$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+            if [ -z "${SERVER_HOST_V6}" ]; then
+                echo "Error: Curl unable to locate your server's public IP address."
+            fi
             ;;
         2)
             SERVER_HOST_V6="$(ip -6 addr | sed -ne 's|^.* inet6 \([^/]*\)/.* scope global.*$|\1|p' | head -1)"
+            if [ -z "${SERVER_HOST_V6}" ]; then
+                echo "Error: IP unable to locate your server's public IP address."
+            fi
             ;;
         3)
-            read -rp "Custom IPV6: " -e -i "$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V6
+            read -rp "Custom IPv6: " -e -i "$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V6
             if [ -z "${SERVER_HOST_V6}" ]; then
                 SERVER_HOST_V6="$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
             fi
@@ -293,7 +288,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             fi
             ;;
         3)
-            read -rp "Custom Domain: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.hostname')" SERVER_HOST
+            read -rp "Custom Domain: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.hostname'[0])" SERVER_HOST
             if [ -z "${SERVER_HOST}" ]; then
                 SERVER_HOST="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
             fi
@@ -316,30 +311,30 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         case ${DISABLE_HOST_SETTINGS} in
         1)
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p
             fi
             ;;
         2)
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv6.conf.all.forwarding=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p
             fi
             ;;
         3)
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
             fi
             if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>${SHADOWSOCKS_IP_FORWARDING_PATH}
-                sysctl -p ${SHADOWSOCKS_IP_FORWARDING_PATH}
+                echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                sysctl -p
             fi
             ;;
         esac
@@ -367,93 +362,33 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if { [ ! -x "$(command -v snap run shadowsocks-libev.ss-server)" ] || [ ! -x "$(command -v socat)" ] || [ ! -x "$(command -v snap)" ] || [ ! -x "$(command -v haveged)" ]; }; then
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update
-                apt-get install snapd haveged socat -y
-                snap install core shadowsocks-libev
-            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                dnf upgrade -y
-                dnf install epel-release -y
-                yum install snapd haveged socat -y
-                snap install core shadowsocks-libev
+        if [ ! -x "$(command -v rustup)" ]; then
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
+            rustup default nightly
+            if [ ! -x "$(command -v ssserver)" ]; then
+                cargo install shadowsocks-rust
             fi
-        fi
-        if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
-            ln -s /snap/bin/shadowsocks-libev.ss-server ${SHADOWSOCKS_BIN_PATH}
         fi
     }
 
     # Install shadowsocks Server
     install-shadowsocks-server
 
-    function v2ray-installer() {
-        if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ] || [ "${SERVER_PORT}" == "443" ]; }; then
-            if [ -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
-                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
-            fi
-            if [ ! -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
-                curl -L "${V2RAY_DOWNLOAD}" --create-dirs -o "${V2RAY_PLUGIN_PATH_ZIPPED}"
-                tar xvzf "${V2RAY_PLUGIN_PATH_ZIPPED}" -C "${SHADOWSOCKS_COMMON_PATH}"
-                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
-                # find "${SHADOWSOCKS_COMMON_PATH}" -name "v2ray*" -exec mv {} ${SHADOWSOCKS_COMMON_PATH}/v2ray-plugin \;
-            fi
-            if { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "80" ]; }; then
-                PLUGIN_OPTS="server"
-            elif { [ "${MODE_CHOICE}" == "tcp_only" ] && [ "${SERVER_PORT}" == "443" ]; }; then
-                read -rp "Custom Domain: " -e -i "example.com" DOMAIN_NAME
-                if [ ! -x "$(command -v snap run certbot)" ]; then
-                    snap install --classic certbot
-                fi
-                if [ -f "/snap/bin/certbot" ]; then
-                    if [ ! -f "/usr/bin/certbot" ]; then
-                        ln -s /snap/bin/certbot /usr/bin/certbot
-                    fi
-                fi
-                if { [ ! -f "${LETS_ENCRYPT_CERT_PATH}" ] && [ ! -f "${LETS_ENCRYPT_KEY_PATH}" ]; }; then
-                    certbot certonly --standalone -n -d "${DOMAIN_NAME}" --agree-tos --register-unsafely-without-email
-                    sleep 15
-                    certbot renew --dry-run
-                fi
-                if [ -f "${LETS_ENCRYPT_CERT_PATH}" ]; then
-                    if [ ! -f "${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}" ]; then
-                        mv "${LETS_ENCRYPT_CERT_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}
-                    fi
-                fi
-                if [ -f "${LETS_ENCRYPT_KEY_PATH}" ]; then
-                    if [ ! -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}" ]; then
-                        mv "${LETS_ENCRYPT_KEY_PATH}" ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
-                    fi
-                fi
-                PLUGIN_OPTS="server;tls;cert=${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH};key=${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH};host=${SERVER_HOST}"
-            fi
-        fi
-    }
-
-    v2ray-installer
-
     function shadowsocks-configuration() {
-        if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-            rm -f ${SHADOWSOCKS_CONFIG_PATH}
-        fi
+    if [ ! -d "${SHADOWSOCKS_PATH}" ]; then
+    mkdir -p ${SHADOWSOCKS_PATH}
+    fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
   \"server\":\"${SERVER_INPUT_IP}\",
   \"mode\":\"${MODE_CHOICE}\",
-  \"server_port\":\"${SERVER_PORT}\",
+  \"server_port\":${SERVER_PORT},
   \"password\":\"${PASSWORD_CHOICE}\",
-  \"method\":\"${ENCRYPTION_CHOICE}\",
-  \"plugin\":\"${V2RAY_PLUGIN_PATH}\",
-  \"plugin_opts\":\"${PLUGIN_OPTS}\"
+  \"method\":\"${ENCRYPTION_CHOICE}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
-        if pgrep systemd-journal; then
-            systemctl enable snap.shadowsocks-libev.ss-server-daemon.service
-            systemctl start snap.shadowsocks-libev.ss-server-daemon.service
-        else
-            service shadowsocks-libev snap.shadowsocks-libev.ss-server-daemon.service
-            service shadowsocks-libev snap.shadowsocks-libev.ss-server-daemon.service
-        fi
+        ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
     }
 
     # Shadowsocks Config
@@ -461,11 +396,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
-        if [ -n "${DOMAIN_NAME}" ]; then
-            echo "Shadowsocks Server Domain: ${DOMAIN_NAME}"
-        else
-            echo "Shadowsocks Server IP: ${SERVER_HOST}"
-        fi
+        echo "Shadowsocks Server IP: ${SERVER_HOST}"
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
@@ -495,23 +426,23 @@ else
         case ${SHADOWSOCKS_OPTIONS} in
         1)
             if pgrep systemd-journal; then
-                systemctl start snap.shadowsocks-libev.ss-server-daemon.service
+                echo "hello"
             else
-                service snap.shadowsocks-libev.ss-server-daemon.service start
+                echo "hello"
             fi
             ;;
         2)
             if pgrep systemd-journal; then
-                systemctl stop snap.shadowsocks-libev.ss-server-daemon.service
+                echo "hello"
             else
-                service snap.shadowsocks-libev.ss-server-daemon.service stop
+                echo "hello"
             fi
             ;;
         3)
             if pgrep systemd-journal; then
-                systemctl restart snap.shadowsocks-libev.ss-server-daemon.service
+                echo "hello"
             else
-                service snap.shadowsocks-libev.ss-server-daemon.service restart
+                echo "hello"
             fi
             ;;
         4)
@@ -519,45 +450,23 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                systemctl disable snap.shadowsocks-libev.ss-server-daemon.service
-                systemctl stop snap.shadowsocks-libev.ss-server-daemon.service
+                echo "hello"
             else
-                service snap.shadowsocks-libev.ss-server-daemon.service disable
-                service snap.shadowsocks-libev.ss-server-daemon.service stop
+                echo "hello"
             fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                snap remove --purge shadowsocks-libev -y
-                apt-get remove --purge snapd haveged -y
-            elif [ "${DISTRO}" == "centos" ]; then
-                snap remove --purge shadowsocks-libev -y
-                yum remove snapd -y
-            elif [ "${DISTRO}" == "fedora" ]; then
-                snap remove --purge shadowsocks-libev -y
-                yum remove snapd -y
-            elif [ "${DISTRO}" == "rhel" ]; then
-                snap remove --purge shadowsocks-libev -y
-                yum remove snapd -y
+                echo "hello"
+            elif { [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "rhel" ]; }; then
+                echo "hello"
             fi
             if [ -d "${SHADOWSOCKS_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_PATH}"
-            fi
-            if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-                rm -rf "${SHADOWSOCKS_COMMON_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_CONFIG_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
-            fi
-            if [ -f "${V2RAY_PLUGIN_PATH_ZIPPED}" ]; then
-                rm -f "${V2RAY_PLUGIN_PATH_ZIPPED}"
-            fi
-            if [ -f "${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}" ]; then
-                rm -f "${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH}"
-            fi
-            if [ -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}" ]; then
-                rm -f "${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
                 read -rp "Do you really want to remove ShadowSocks Backup? (y/n): " -n 1 -r
@@ -581,7 +490,7 @@ else
                     rm -f ${SHADOWSOCKS_BACKUP_PATH}
                 fi
                 if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} ${SHADOWSOCKS_SERVICE_PATH} ${SHADOWSOCKS_IP_FORWARDING_PATH} ${SHADOWSOCKS_BIN_PATH} ${SHADOWSOCKS_BIN_PATH} ${V2RAY_PLUGIN_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_CERT_PATH} ${SHADOWSOCKS_LETS_ENCRYPT_KEY_PATH}
+                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} "${SHADOWSOCKS_IP_FORWARDING_PATH}"
                 else
                     exit
                 fi
@@ -589,17 +498,17 @@ else
             ;;
         8)
             if [ -d "${SHADOWSOCKS_COMMON_PATH}" ]; then
-                rm -rf ${SHADOWSOCKS_COMMON_PATH}
+                rm -rf "${SHADOWSOCKS_COMMON_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-                unzip ${SHADOWSOCKS_CONFIG_PATH} -d ${SHADOWSOCKS_COMMON_PATH}
+                unzip ${SHADOWSOCKS_CONFIG_PATH} -d "${SHADOWSOCKS_COMMON_PATH}"
             else
                 exit
             fi
             if pgrep systemd-journal; then
-                systemctl restart snap.shadowsocks-libev.ss-server-daemon.service
+                echo "hello"
             else
-                service snap.shadowsocks-libev.ss-server-daemon.service restart
+                echo "hello"
             fi
             ;;
         esac
