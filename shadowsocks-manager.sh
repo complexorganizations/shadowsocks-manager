@@ -124,13 +124,9 @@ function headless-install() {
 # No GUI
 headless-install
 
-SHADOWSOCKS_PATH="etc/shadowsocks"
+SHADOWSOCKS_PATH="/etc/shadowsocks"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
-CHECK_ARCHITECTURE="$(dpkg --print-architecture)"
-if { [ "${CHECK_ARCHITECTURE}" == "arm" ] || [ "${CHECK_ARCHITECTURE}" == "arm64" ] || [ "${CHECK_ARCHITECTURE}" == "armhf" ]; }; then
-    CHECK_ARCHITECTURE="arm"
-fi
 SERVER_INPUT_IP="0.0.0.0"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
 
@@ -388,6 +384,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
   \"method\":\"${ENCRYPTION_CHOICE}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
+        ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d start
     }
 
     # Shadowsocks Config
@@ -395,11 +392,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
-        if [ -n "${DOMAIN_NAME}" ]; then
-            echo "Shadowsocks Server Domain: ${DOMAIN_NAME}"
-        else
-            echo "Shadowsocks Server IP: ${SERVER_HOST}"
-        fi
+        echo "Shadowsocks Server IP: ${SERVER_HOST}"
         echo "Shadowsocks Server Port: ${SERVER_PORT}"
         echo "Shadowsocks Server Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Server Encryption: ${ENCRYPTION_CHOICE}"
