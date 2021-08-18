@@ -299,50 +299,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # IPv4 or IPv6 Selector
     ipvx-select
 
-    # Do you want to disable IPv4 or IPv6 or leave them both enabled?
-    function disable-ipvx() {
-        echo "Do you want to disable IPv4 or IPv6 on the server?"
-        echo "  1) No (Recommended)"
-        echo "  2) Disable IPV4"
-        echo "  3) Disable IPV6"
-        until [[ "${DISABLE_HOST_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "Disable Host Choice [1-3]: " -e -i 1 DISABLE_HOST_SETTINGS
-        done
-        case ${DISABLE_HOST_SETTINGS} in
-        1)
-            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
-            fi
-            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
-                echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
-                sysctl -p
-            fi
-            ;;
-        2)
-            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
-            fi
-            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv6.conf.all.forwarding=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
-                sysctl -p
-            fi
-            ;;
-        3)
-            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
-            fi
-            if [ ! -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                echo "net.ipv4.ip_forward=1" >>"${SHADOWSOCKS_IP_FORWARDING_PATH}"
-                sysctl -p
-            fi
-            ;;
-        esac
-    }
-
-    # Disable Ipv4 or Ipv6
-    disable-ipvx
-
     # Determine TCP or UDP
     function shadowsocks-mode() {
         echo "Choose your method TCP"
