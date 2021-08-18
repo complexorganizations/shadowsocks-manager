@@ -383,12 +383,12 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
   \"server\":\"${SERVER_INPUT_IP}\",
   \"mode\":\"${MODE_CHOICE}\",
-  \"server_port\":\"${SERVER_PORT}\",
+  \"server_port\":${SERVER_PORT},
   \"password\":\"${PASSWORD_CHOICE}\",
   \"method\":\"${ENCRYPTION_CHOICE}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
-        ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d start
+        ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
     }
 
     # Shadowsocks Config
