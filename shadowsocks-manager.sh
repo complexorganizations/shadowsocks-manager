@@ -325,7 +325,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         if [ ! -f "/usr/bin/shadowsocks-rust.ssserver" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
-        if [ ! -f "/snap/bin/shadowsocks-rust.ssurl" ]; then
+        if [ ! -f "/usr/bin/shadowsocks-rust.ssurl" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssurl /usr/bin/shadowsocks-rust.ssurl
         fi
     }
@@ -334,9 +334,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     install-shadowsocks-server
 
     function shadowsocks-configuration() {
-        if [ ! -d "${SHADOWSOCKS_PATH}" ]; then
-            mkdir -p ${SHADOWSOCKS_PATH}
-        fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
   \"server\":\"${SERVER_HOST}\",
