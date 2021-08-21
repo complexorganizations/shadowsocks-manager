@@ -318,7 +318,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if [ ! -x "$(command -v snap run ssserver)" ]; then
+        if [ ! -x "$(command -v snap run shadowsocks-rust.ssserver)" ]; then
             snap install core
             snap install --candidate shadowsocks-rust
         fi
@@ -351,7 +351,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             service snap.shadowsocks-rust.ssserver-daemon.service start
         fi
         # Shadowsocks start as daemon
-        ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
+        shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
     }
 
     # Shadowsocks Config
@@ -364,7 +364,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         echo "Shadowsocks Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Mode: ${MODE_CHOICE}"
-        ssurl -c -e ${SHADOWSOCKS_CONFIG_PATH}
+        shadowsocks-rust.ssurl -c -e ${SHADOWSOCKS_CONFIG_PATH}
     }
 
     # Show the config
