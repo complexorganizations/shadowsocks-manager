@@ -124,7 +124,7 @@ function headless-install() {
 headless-install
 
 # Global variable
-SHADOWSOCKS_PATH="/etc/shadowsocks"
+SHADOWSOCKS_PATH="/var/snap/shadowsocks-rust/common/etc/shadowsocks-rust"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
@@ -393,23 +393,23 @@ else
         case ${SHADOWSOCKS_OPTIONS} in
         1)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl start snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service start
             fi
             ;;
         2)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl stop snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service stop
             fi
             ;;
         3)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl restart snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service restart
             fi
             ;;
         4)
@@ -417,14 +417,18 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl stop snap.shadowsocks-rust.ssserver-daemon.service
+                systemctl disable snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service stop
+                service snap.shadowsocks-rust.ssserver-daemon.service disable
             fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                echo "Update comming soon!"
+                snap remove --purge shadowsocks-rust -y
+                apt-get remove --purge snapd -y
             elif { [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                echo "Update comming soon!"
+                snap remove --purge shadowsocks-rust -y
+                yum remove snapd -y
             fi
             if [ -d "${SHADOWSOCKS_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_PATH}"
@@ -473,9 +477,9 @@ else
                 exit
             fi
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl restart snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service restart
             fi
             ;;
         esac
