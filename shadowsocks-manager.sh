@@ -322,8 +322,11 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             snap install core
             snap install --candidate shadowsocks-rust
         fi
-        if [ ! -f "${/usr/bin/shadowsocks-rust.ssserver}" ]; then
+        if [ ! -f "/usr/bin/shadowsocks-rust.ssserver" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
+        fi
+        if [ ! -f "/snap/bin/shadowsocks-rust.ssurl" ]; then
+            ln -s /snap/bin/shadowsocks-rust.ssurl /usr/bin/shadowsocks-rust.ssurl
         fi
     }
 
@@ -342,6 +345,13 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
   \"password\":\"${PASSWORD_CHOICE}\",
   \"method\":\"${ENCRYPTION_CHOICE}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
+        fi
+        if pgrep systemd-journal; then
+            systemctl enable snap.shadowsocks-rust.ssserver-daemon.service
+            systemctl start snap.shadowsocks-rust.ssserver-daemon.service
+        else
+            service snap.shadowsocks-rust.ssserver-daemon.service enable
+            service snap.shadowsocks-rust.ssserver-daemon.service start
         fi
         # Shadowsocks start as daemon
         ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
