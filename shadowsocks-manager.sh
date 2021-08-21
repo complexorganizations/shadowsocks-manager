@@ -27,11 +27,11 @@ dist-check
 # Pre-Checks system requirements
 function installing-system-requirements() {
     if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ]; }; then
+        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ] || [ ! -x "$(command -v snap)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep gawk iproute2 haveged -y
+                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
             elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                yum update -y && yum install epel-release curl bc jq sed zip unzip grep gawk iproute2 haveged -y
+                yum update -y && yum install epel-release curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
             fi
         fi
     else
@@ -318,14 +318,12 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if [ ! -x "$(command -v rustup)" ]; then
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            # shellcheck disable=SC2086,SC1091
-            source ${HOME}/.cargo/env
-            rustup default nightly
+        if [ ! -x "$(command -v snap run ssserver)" ]; then
+            snap install core
+            snap install --candidate shadowsocks-rust
         fi
-        if [ ! -x "$(command -v ssserver)" ]; then
-            cargo install shadowsocks-rust
+        if [ ! -f "${/usr/bin/shadowsocks-rust.ssserver}" ]; then
+            ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
     }
 
