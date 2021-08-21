@@ -352,8 +352,10 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         fi
         # Shadowsocks start as daemon
         shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
-        # Remove the file # https://stackoverflow.com/questions/42443273/raspberry-pi-libarmmem-so-cannot-open-shared-object-file-error
-        rm -f /etc/ld.so.preload
+        # Fix the issue on raspbian
+        if [ "${DISTRO}" == "raspbian" ]; then
+            sed -i "s/\usr/#\/usr/" /etc/ld.so.preload
+        fi
     }
 
     # Shadowsocks Config
