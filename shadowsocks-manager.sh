@@ -288,9 +288,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         if [ ! -f "/usr/bin/shadowsocks-rust.ssserver" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
-        if [ ! -f "/usr/bin/shadowsocks-rust.ssurl" ]; then
-            ln -s /snap/bin/shadowsocks-rust.ssurl /usr/bin/shadowsocks-rust.ssurl
-        fi
     }
 
     # Install shadowsocks Server
@@ -306,15 +303,28 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
   \"method\":\"${ENCRYPTION_CHOICE}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
-        if pgrep systemd-journal; then
-            systemctl enable snap.shadowsocks-rust.ssserver-daemon.service
-            systemctl start snap.shadowsocks-rust.ssserver-daemon.service
-        else
-            service snap.shadowsocks-rust.ssserver-daemon.service enable
-            service snap.shadowsocks-rust.ssserver-daemon.service start
+        # Install the service
+        if [ ! -f "/etc/systemd/system/shadowsocks-rust.service" ]; then
+        echo "[Unit]
+Description=Shadowsocks-rust Server
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
+
+[Install]
+WantedBy=multi-user.target" >>/etc/systemd/system/shadowsocks-rust.service
         fi
-        # Shadowsocks start as daemon
-        shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
+        if pgrep systemd-journal; then
+            systemctl daemon-reload
+            systemctl enable shadowsocks-rust
+            systemctl start shadowsocks-rust
+        else
+            service shadowsocks-rust enable
+            service shadowsocks-rust start
+        fi
         # Fix the issue on raspbian
         if [ "${DISTRO}" == "raspbian" ]; then
             sed -i "s/\usr/#\/usr/" /etc/ld.so.preload
@@ -336,7 +346,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         echo "Shadowsocks Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Mode: ${MODE_CHOICE}"
-        shadowsocks-rust.ssurl -c -e ${SHADOWSOCKS_CONFIG_PATH}
     }
 
     # Show the config
@@ -362,23 +371,23 @@ else
         case ${SHADOWSOCKS_OPTIONS} in
         1)
             if pgrep systemd-journal; then
-                systemctl start snap.shadowsocks-rust.ssserver-daemon.service
+                systemctl start shadowsocks-rust
             else
-                service snap.shadowsocks-rust.ssserver-daemon.service start
+                service shadowsocks-rust start
             fi
             ;;
         2)
             if pgrep systemd-journal; then
-                systemctl stop snap.shadowsocks-rust.ssserver-daemon.service
+                systemctl stop shadowsocks-rust
             else
-                service snap.shadowsocks-rust.ssserver-daemon.service stop
+                service shadowsocks-rust stop
             fi
             ;;
         3)
             if pgrep systemd-journal; then
-                systemctl restart snap.shadowsocks-rust.ssserver-daemon.service
+                systemctl restart shadowsocks-rust
             else
-                service snap.shadowsocks-rust.ssserver-daemon.service restart
+                service shadowsocks-rust restart
             fi
             ;;
         4)
@@ -386,11 +395,11 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                systemctl stop snap.shadowsocks-rust.ssserver-daemon.service
-                systemctl disable snap.shadowsocks-rust.ssserver-daemon.service
+                systemctl stop shadowsocks-rust
+                systemctl disable shadowsocks-rust
             else
-                service snap.shadowsocks-rust.ssserver-daemon.service stop
-                service snap.shadowsocks-rust.ssserver-daemon.service disable
+                service shadowsocks-rust stop
+                service shadowsocks-rust disable
             fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
                 snap remove --purge shadowsocks-rust -y
@@ -446,9 +455,9 @@ else
                 exit
             fi
             if pgrep systemd-journal; then
-                systemctl restart snap.shadowsocks-rust.ssserver-daemon.service
+                systemctl restart shadowsocks-rust
             else
-                service snap.shadowsocks-rust.ssserver-daemon.service restart
+                service shadowsocks-rust restart
             fi
             ;;
         esac
