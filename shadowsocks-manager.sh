@@ -115,7 +115,6 @@ function headless-install() {
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
         SERVER_HOST_V4_SETTINGS=${SERVER_HOST_V4_SETTINGS:-1}
         SERVER_HOST_V6_SETTINGS=${SERVER_HOST_V6_SETTINGS:-1}
-        SERVER_HOST_SETTINGS=${SERVER_HOST_SETTINGS:-1}
         MODE_CHOICE_SETTINGS=${MODE_CHOICE_SETTINGS:-1}
     fi
 }
@@ -263,42 +262,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # Set Port
     test-connectivity-v6
 
-    # What ip version would you like to be available on this VPN?
-    function ipvx-select() {
-        echo "What IPv do you want to use to connect to ShadowSocks server?"
-        echo "  1) IPv4 (Recommended)"
-        echo "  2) IPv6"
-        echo "  3) Custom (Advanced)"
-        until [[ "$SERVER_HOST_SETTINGS" =~ ^[1-3]$ ]]; do
-            read -rp "IP Choice [1-3]: " -e -i 1 SERVER_HOST_SETTINGS
-        done
-        case $SERVER_HOST_SETTINGS in
-        1)
-            if [ -n "${SERVER_HOST_V4}" ]; then
-                SERVER_HOST="${SERVER_HOST_V4}"
-            else
-                SERVER_HOST="[${SERVER_HOST_V6}]"
-            fi
-            ;;
-        2)
-            if [ -n "${SERVER_HOST_V6}" ]; then
-                SERVER_HOST="[${SERVER_HOST_V6}]"
-            else
-                SERVER_HOST="${SERVER_HOST_V4}"
-            fi
-            ;;
-        3)
-            read -rp "Custom Domain: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.hostname'[0])" SERVER_HOST
-            if [ -z "${SERVER_HOST}" ]; then
-                SERVER_HOST="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
-            fi
-            ;;
-        esac
-    }
-
-    # IPv4 or IPv6 Selector
-    ipvx-select
-
     # Determine TCP or UDP
     function shadowsocks-mode() {
         echo "Choose your method TCP"
@@ -336,7 +299,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     function shadowsocks-configuration() {
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
-  \"server\":\"${SERVER_HOST}\",
+  \"server\":\"0.0.0.0\",
   \"mode\":\"${MODE_CHOICE}\",
   \"server_port\":${SERVER_PORT},
   \"password\":\"${PASSWORD_CHOICE}\",
@@ -363,7 +326,12 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
-        echo "Shadowsocks IP: ${SERVER_HOST}"
+        if [ -z "${SERVER_HOST_V4}" ]; then
+            echo "Shadowsocks IPv4: ${SERVER_HOST_V4}"
+        fi
+        if [ -z "${SERVER_HOST_V6}" ]; then
+            echo "Shadowsocks IPv6: ${SERVER_HOST_V6}"
+        fi
         echo "Shadowsocks Port: ${SERVER_PORT}"
         echo "Shadowsocks Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
