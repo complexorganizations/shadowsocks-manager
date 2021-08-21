@@ -125,6 +125,7 @@ headless-install
 # Global variable
 SHADOWSOCKS_PATH="/var/snap/shadowsocks-rust/common/etc/shadowsocks-rust"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
+SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-rust.service"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
 
@@ -304,7 +305,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
         # Install the service
-        if [ ! -f "/etc/systemd/system/shadowsocks-rust.service" ]; then
+        if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
         echo "[Unit]
 Description=Shadowsocks-rust Server
 After=network.target
@@ -315,7 +316,7 @@ Restart=on-failure
 ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
 
 [Install]
-WantedBy=multi-user.target" >>/etc/systemd/system/shadowsocks-rust.service
+WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
         fi
         if pgrep systemd-journal; then
             systemctl daemon-reload
