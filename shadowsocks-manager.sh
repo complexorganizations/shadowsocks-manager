@@ -27,11 +27,11 @@ dist-check
 # Pre-Checks system requirements
 function installing-system-requirements() {
     if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ]; }; then
+        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ] || [ ! -x "$(command -v snap)" ]; }; then
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep gawk iproute2 haveged -y
+                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
             elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                yum update -y && yum install epel-release curl bc jq sed zip unzip grep gawk iproute2 haveged -y
+                yum update -y && yum install epel-release curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
             fi
         fi
     else
@@ -115,7 +115,6 @@ function headless-install() {
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
         SERVER_HOST_V4_SETTINGS=${SERVER_HOST_V4_SETTINGS:-1}
         SERVER_HOST_V6_SETTINGS=${SERVER_HOST_V6_SETTINGS:-1}
-        SERVER_HOST_SETTINGS=${SERVER_HOST_SETTINGS:-1}
         MODE_CHOICE_SETTINGS=${MODE_CHOICE_SETTINGS:-1}
     fi
 }
@@ -124,7 +123,7 @@ function headless-install() {
 headless-install
 
 # Global variable
-SHADOWSOCKS_PATH="/etc/shadowsocks"
+SHADOWSOCKS_PATH="/var/snap/shadowsocks-rust/common/etc/shadowsocks-rust"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
@@ -263,42 +262,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # Set Port
     test-connectivity-v6
 
-    # What ip version would you like to be available on this VPN?
-    function ipvx-select() {
-        echo "What IPv do you want to use to connect to ShadowSocks server?"
-        echo "  1) IPv4 (Recommended)"
-        echo "  2) IPv6"
-        echo "  3) Custom (Advanced)"
-        until [[ "$SERVER_HOST_SETTINGS" =~ ^[1-3]$ ]]; do
-            read -rp "IP Choice [1-3]: " -e -i 1 SERVER_HOST_SETTINGS
-        done
-        case $SERVER_HOST_SETTINGS in
-        1)
-            if [ -n "${SERVER_HOST_V4}" ]; then
-                SERVER_HOST="${SERVER_HOST_V4}"
-            else
-                SERVER_HOST="[${SERVER_HOST_V6}]"
-            fi
-            ;;
-        2)
-            if [ -n "${SERVER_HOST_V6}" ]; then
-                SERVER_HOST="[${SERVER_HOST_V6}]"
-            else
-                SERVER_HOST="${SERVER_HOST_V4}"
-            fi
-            ;;
-        3)
-            read -rp "Custom Domain: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.hostname'[0])" SERVER_HOST
-            if [ -z "${SERVER_HOST}" ]; then
-                SERVER_HOST="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
-            fi
-            ;;
-        esac
-    }
-
-    # IPv4 or IPv6 Selector
-    ipvx-select
-
     # Determine TCP or UDP
     function shadowsocks-mode() {
         echo "Choose your method TCP"
@@ -318,14 +281,15 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if [ ! -x "$(command -v rustup)" ]; then
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            # shellcheck disable=SC2086,SC1091
-            source ${HOME}/.cargo/env
-            rustup default nightly
+        if [ ! -x "$(command -v snap run shadowsocks-rust.ssserver)" ]; then
+            snap install core
+            snap install --candidate shadowsocks-rust
         fi
-        if [ ! -x "$(command -v ssserver)" ]; then
-            cargo install shadowsocks-rust
+        if [ ! -f "/usr/bin/shadowsocks-rust.ssserver" ]; then
+            ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
+        fi
+        if [ ! -f "/usr/bin/shadowsocks-rust.ssurl" ]; then
+            ln -s /snap/bin/shadowsocks-rust.ssurl /usr/bin/shadowsocks-rust.ssurl
         fi
     }
 
@@ -333,20 +297,28 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     install-shadowsocks-server
 
     function shadowsocks-configuration() {
-        if [ ! -d "${SHADOWSOCKS_PATH}" ]; then
-            mkdir -p ${SHADOWSOCKS_PATH}
-        fi
         if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             echo "{
-  \"server\":\"${SERVER_HOST}\",
+  \"server\":\"0.0.0.0\",
   \"mode\":\"${MODE_CHOICE}\",
   \"server_port\":${SERVER_PORT},
   \"password\":\"${PASSWORD_CHOICE}\",
   \"method\":\"${ENCRYPTION_CHOICE}\"
 }" >>${SHADOWSOCKS_CONFIG_PATH}
         fi
+        if pgrep systemd-journal; then
+            systemctl enable snap.shadowsocks-rust.ssserver-daemon.service
+            systemctl start snap.shadowsocks-rust.ssserver-daemon.service
+        else
+            service snap.shadowsocks-rust.ssserver-daemon.service enable
+            service snap.shadowsocks-rust.ssserver-daemon.service start
+        fi
         # Shadowsocks start as daemon
-        ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
+        shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH} -d
+        # Fix the issue on raspbian
+        if [ "${DISTRO}" == "raspbian" ]; then
+            sed -i "s/\usr/#\/usr/" /etc/ld.so.preload
+        fi
     }
 
     # Shadowsocks Config
@@ -354,12 +326,17 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     function show-config() {
         echo "Config File ---> ${SHADOWSOCKS_CONFIG_PATH}"
-        echo "Shadowsocks IP: ${SERVER_HOST}"
+        if [ -z "${SERVER_HOST_V4}" ]; then
+            echo "Shadowsocks IPv4: ${SERVER_HOST_V4}"
+        fi
+        if [ -z "${SERVER_HOST_V6}" ]; then
+            echo "Shadowsocks IPv6: ${SERVER_HOST_V6}"
+        fi
         echo "Shadowsocks Port: ${SERVER_PORT}"
         echo "Shadowsocks Password: ${PASSWORD_CHOICE}"
         echo "Shadowsocks Encryption: ${ENCRYPTION_CHOICE}"
         echo "Shadowsocks Mode: ${MODE_CHOICE}"
-        ssurl -c -e ${SHADOWSOCKS_CONFIG_PATH}
+        shadowsocks-rust.ssurl -c -e ${SHADOWSOCKS_CONFIG_PATH}
     }
 
     # Show the config
@@ -385,23 +362,23 @@ else
         case ${SHADOWSOCKS_OPTIONS} in
         1)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl start snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service start
             fi
             ;;
         2)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl stop snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service stop
             fi
             ;;
         3)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl restart snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service restart
             fi
             ;;
         4)
@@ -409,14 +386,18 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl stop snap.shadowsocks-rust.ssserver-daemon.service
+                systemctl disable snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service stop
+                service snap.shadowsocks-rust.ssserver-daemon.service disable
             fi
             if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                echo "Update comming soon!"
+                snap remove --purge shadowsocks-rust -y
+                apt-get remove --purge snapd -y
             elif { [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                echo "Update comming soon!"
+                snap remove --purge shadowsocks-rust -y
+                yum remove snapd -y
             fi
             if [ -d "${SHADOWSOCKS_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_PATH}"
@@ -465,9 +446,9 @@ else
                 exit
             fi
             if pgrep systemd-journal; then
-                echo "Update comming soon!"
+                systemctl restart snap.shadowsocks-rust.ssserver-daemon.service
             else
-                echo "Update comming soon!"
+                service snap.shadowsocks-rust.ssserver-daemon.service restart
             fi
             ;;
         esac
