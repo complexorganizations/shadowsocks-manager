@@ -312,7 +312,6 @@ After=network.target
 
 [Service]
 Type=simple
-Restart=on-failure
 ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
 
 [Install]
