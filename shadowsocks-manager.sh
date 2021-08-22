@@ -109,7 +109,7 @@ usage "$@"
 
 # Skips all questions and just get a client conf after install.
 function headless-install() {
-    if [ "${HEADLESS_INSTALL}" == "y" ]; then
+    if { [ "${HEADLESS_INSTALL}" == "y" ] || [ "${HEADLESS_INSTALL}" == "Y" ]; }; then
         PORT_CHOICE_SETTINGS=${IPV4_SUBNET_SETTINGS:-1}
         PASSWORD_CHOICE_SETTINGS=${IPV6_SUBNET_SETTINGS:-1}
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
@@ -414,14 +414,14 @@ else
             if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
                 rm -f "${SHADOWSOCKS_CONFIG_PATH}"
             fi
-            if [ -f "${SHADOWSOCKS_IP_FORWARDING_PATH}" ]; then
-                rm -f "${SHADOWSOCKS_IP_FORWARDING_PATH}"
+            if [ -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
+                rm -f "${SHADOWSOCKS_SERVICE_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
-                read -rp "Do you really want to remove ShadowSocks Backup? (y/n): " -n 1 -r
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                read -rp "Do you really want to remove ShadowSocks Backup? (y/n):" -e -i "y" REMOVE_SHADOWSOCKS_BACKUP
+                if { [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "y" ] || [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "Y" ]; }; then
                     rm -f ${SHADOWSOCKS_BACKUP_PATH}
-                elif [[ $REPLY =~ ^[Nn]$ ]]; then
+                elif { [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "n" ] || [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "N" ]; }; then
                     exit
                 fi
             fi
@@ -439,7 +439,7 @@ else
                     rm -f ${SHADOWSOCKS_BACKUP_PATH}
                 fi
                 if [ -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
-                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH} "${SHADOWSOCKS_IP_FORWARDING_PATH}"
+                    zip -rej ${SHADOWSOCKS_BACKUP_PATH} ${SHADOWSOCKS_CONFIG_PATH}
                 else
                     exit
                 fi
