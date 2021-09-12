@@ -45,6 +45,17 @@ function installing-system-requirements() {
 # Run the function and check for requirements
 installing-system-requirements
 
+# Lets check the kernel version
+function kernel-check() {
+  if [ "${DISTRO_KERNEL_VERSION}" != ${ALLOWED_DISTRO_KERNEL_VERSION} ]; then
+    echo "Error: Kernel version is not ${DISTRO_KERNEL_VERSION}"
+    exit
+  fi
+}
+
+# Kernel Version
+kernel-check
+
 function usage-guide() {
     echo "usage: ./$(basename "$0") <command>"
     echo "  --install     Install shadowsocks Server"
