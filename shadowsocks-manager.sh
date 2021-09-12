@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # https://github.com/complexorganizations/shadowsocks-manager
 
 # Require script to be run as root
@@ -12,31 +12,33 @@ function super-user-check() {
 # Check for root
 super-user-check
 
-# Detect Operating System
-function dist-check() {
-    if [ -e /etc/os-release ]; then
+# Get the current system information
+function system-information() {
+    if [ -f /etc/os-release ]; then
         # shellcheck disable=SC1091
         source /etc/os-release
         DISTRO=${ID}
+        ALLOWED_DISTRO="debian"
+        DISTRO_VERSION=${VERSION_ID}
+        ALLOWED_DISTRO_VERSION="11"
+        DISTRO_KERNEL_VERSION=$(uname -r | cut -d'.' -f1-2)
+        ALLOWED_DISTRO_KERNEL_VERSION="5.10"
     fi
 }
 
-# Check Operating System
-dist-check
+# Get the current system information
+system-information
 
 # Pre-Checks system requirements
 function installing-system-requirements() {
-    if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ] || [ ! -x "$(command -v snap)" ]; }; then
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
-            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                yum update -y && yum install epel-release curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
-            fi
+    if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v cut)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v lsof)" ] || [ ! -x "$(command -v cron)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v pgrep)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v qrencode)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v openssl)" ] || [ ! -x "$(command -v ifupdown)" ] || [ ! -x "$(command -v nftables)" ] || [ ! -x "$(command -v snap)" ]; }; then
+        if { [ "${DISTRO}" == ${ALLOWED_DISTRO} ] && [ "${DISTRO_VERSION}" == ${ALLOWED_DISTRO_VERSION} ]; }; then
+            apt-get update
+            apt-get install curl coreutils jq iproute2 lsof cron gawk procps grep qrencode sed zip unzip openssl ifupdown nftables snapd -y
+        else
+            echo "Error: ${DISTRO} is not supported."
+            exit
         fi
-    else
-        echo "Error: ${DISTRO} not supported."
-        exit
     fi
 }
 
@@ -109,7 +111,7 @@ usage "$@"
 
 # Skips all questions and just get a client conf after install.
 function headless-install() {
-    if { [ "${HEADLESS_INSTALL}" == "y" ] || [ "${HEADLESS_INSTALL}" == "Y" ]; }; then
+    if [[ ${HEADLESS_INSTALL} =~ ^[Yy]$ ]]; then
         PORT_CHOICE_SETTINGS=${IPV4_SUBNET_SETTINGS:-1}
         PASSWORD_CHOICE_SETTINGS=${IPV6_SUBNET_SETTINGS:-1}
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
@@ -286,7 +288,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             snap install core
             snap install --candidate shadowsocks-rust
         fi
-        if [ ! -f "/usr/bin/shadowsocks-rust.ssserver" ]; then
+        if [ ! -x "$(command -v shadowsocks-rust.ssserver)" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
     }
@@ -306,7 +308,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         fi
         # Install the service
         if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
-        echo "[Unit]
+            echo "[Unit]
 Description=Shadowsocks-rust Server
 After=network.target
 
@@ -317,17 +319,9 @@ ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
         fi
-        if pgrep systemd-journal; then
-            systemctl daemon-reload
-            systemctl enable shadowsocks-rust
-            systemctl start shadowsocks-rust
-        else
+        if ! pgrep systemd-journal; then
             service shadowsocks-rust enable
             service shadowsocks-rust start
-        fi
-        # Fix the issue on raspbian
-        if [ "${DISTRO}" == "raspbian" ]; then
-            sed -i "s/\usr/#\/usr/" /etc/ld.so.preload
         fi
     }
 
@@ -370,23 +364,17 @@ else
         done
         case ${SHADOWSOCKS_OPTIONS} in
         1)
-            if pgrep systemd-journal; then
-                systemctl start shadowsocks-rust
-            else
+            if ! pgrep systemd-journal; then
                 service shadowsocks-rust start
             fi
             ;;
         2)
-            if pgrep systemd-journal; then
-                systemctl stop shadowsocks-rust
-            else
+            if ! pgrep systemd-journal; then
                 service shadowsocks-rust stop
             fi
             ;;
         3)
-            if pgrep systemd-journal; then
-                systemctl restart shadowsocks-rust
-            else
+            if ! pgrep systemd-journal; then
                 service shadowsocks-rust restart
             fi
             ;;
@@ -394,20 +382,12 @@ else
             cat ${SHADOWSOCKS_CONFIG_PATH}
             ;;
         5)
-            if pgrep systemd-journal; then
-                systemctl stop shadowsocks-rust
-                systemctl disable shadowsocks-rust
-            else
+            if ! pgrep systemd-journal; then
                 service shadowsocks-rust stop
                 service shadowsocks-rust disable
             fi
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                snap remove --purge shadowsocks-rust -y
-                apt-get remove --purge snapd -y
-            elif { [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                snap remove --purge shadowsocks-rust -y
-                yum remove snapd -y
-            fi
+            snap remove --purge shadowsocks-rust -y
+            apt-get remove --purge snapd -y
             if [ -d "${SHADOWSOCKS_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_PATH}"
             fi
@@ -418,12 +398,7 @@ else
                 rm -f "${SHADOWSOCKS_SERVICE_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
-                read -rp "Do you really want to remove ShadowSocks Backup? (y/n):" -e -i "y" REMOVE_SHADOWSOCKS_BACKUP
-                if { [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "y" ] || [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "Y" ]; }; then
-                    rm -f ${SHADOWSOCKS_BACKUP_PATH}
-                elif { [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "n" ] || [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "N" ]; }; then
-                    exit
-                fi
+                rm -f ${SHADOWSOCKS_BACKUP_PATH}
             fi
             ;;
         6) # Update the script
@@ -454,9 +429,7 @@ else
             else
                 exit
             fi
-            if pgrep systemd-journal; then
-                systemctl restart shadowsocks-rust
-            else
+            if ! pgrep systemd-journal; then
                 service shadowsocks-rust restart
             fi
             ;;
