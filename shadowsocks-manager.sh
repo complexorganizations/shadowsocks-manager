@@ -208,7 +208,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     function install-shadowsocks-server() {
         if [ ! -x "$(command -v snap run shadowsocks-rust.ssserver)" ]; then
             snap install core
-            snap install --candidate shadowsocks-rust
+            snap install shadowsocks-rust
         fi
         if [ ! -x "$(command -v shadowsocks-rust.ssserver)" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
@@ -242,6 +242,7 @@ ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
         fi
         if pgrep systemd-journal; then
+            systemctl daemon-reload
             systemctl enable shadowsocks-rust
             systemctl start shadowsocks-rust
         else
