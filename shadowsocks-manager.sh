@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # https://github.com/complexorganizations/shadowsocks-manager
 
 # Require script to be run as root
@@ -12,30 +12,43 @@ function super-user-check() {
 # Check for root
 super-user-check
 
-# Detect Operating System
-function dist-check() {
-    if [ -e /etc/os-release ]; then
+# Get the current system information
+function system-information() {
+    if [ -f /etc/os-release ]; then
         # shellcheck disable=SC1091
         source /etc/os-release
         DISTRO=${ID}
+        DISTRO_VERSION=${VERSION_ID}
+        DISTRO_KERNEL_VERSION=$(uname -r | cut -d'.' -f1-2)
     fi
 }
 
-# Check Operating System
-dist-check
+# Get the current system information
+system-information
 
 # Pre-Checks system requirements
 function installing-system-requirements() {
-    if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v bc)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v haveged)" ] || [ ! -x "$(command -v snap)" ]; }; then
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                apt-get update && apt-get install build-essential curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
-            elif { [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                yum update -y && yum install epel-release curl bc jq sed zip unzip grep gawk iproute2 haveged snapd -y
+    if { [ "${CURRENT_DISTRO}" == "ubuntu" ] || [ "${CURRENT_DISTRO}" == "debian" ] || [ "${CURRENT_DISTRO}" == "raspbian" ] || [ "${CURRENT_DISTRO}" == "pop" ] || [ "${CURRENT_DISTRO}" == "kali" ] || [ "${CURRENT_DISTRO}" == "linuxmint" ] || [ "${CURRENT_DISTRO}" == "neon" ] || [ "${CURRENT_DISTRO}" == "fedora" ] || [ "${CURRENT_DISTRO}" == "centos" ] || [ "${CURRENT_DISTRO}" == "rhel" ] || [ "${CURRENT_DISTRO}" == "almalinux" ] || [ "${CURRENT_DISTRO}" == "rocky" ] || [ "${CURRENT_DISTRO}" == "arch" ] || [ "${CURRENT_DISTRO}" == "archarm" ] || [ "${CURRENT_DISTRO}" == "manjaro" ] || [ "${CURRENT_DISTRO}" == "alpine" ] || [ "${CURRENT_DISTRO}" == "freebsd" ]; }; then
+        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v cut)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v lsof)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v pgrep)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v openssl)" ] || [ ! -x "$(command -v snap)" ]; }; then
+            if { [ "${CURRENT_DISTRO}" == "ubuntu" ] || [ "${CURRENT_DISTRO}" == "debian" ] || [ "${CURRENT_DISTRO}" == "raspbian" ] || [ "${CURRENT_DISTRO}" == "pop" ] || [ "${CURRENT_DISTRO}" == "kali" ] || [ "${CURRENT_DISTRO}" == "linuxmint" ] || [ "${CURRENT_DISTRO}" == "neon" ]; }; then
+                apt-get update
+                apt-get install curl coreutils jq iproute2 lsof gawk procps grep sed zip unzip openssl snapd -y
+            elif { [ "${CURRENT_DISTRO}" == "fedora" ] || [ "${CURRENT_DISTRO}" == "centos" ] || [ "${CURRENT_DISTRO}" == "rhel" ] || [ "${CURRENT_DISTRO}" == "almalinux" ] || [ "${CURRENT_DISTRO}" == "rocky" ]; }; then
+                yum update
+                yum install epel-release -y
+                yum install curl coreutils jq iproute2 lsof gawk procps-ng grep sed zip unzip openssl snapd -y
+            elif { [ "${CURRENT_DISTRO}" == "arch" ] || [ "${CURRENT_DISTRO}" == "archarm" ] || [ "${CURRENT_DISTRO}" == "manjaro" ]; }; then
+                pacman -Syu --noconfirm --needed curl coreutils jq iproute2 lsof gawk procps-ng grep sed zip unzip openssl snapd
+            elif [ "${CURRENT_DISTRO}" == "alpine" ]; then
+                apk update
+                apk add curl coreutils jq iproute2 lsof gawk procps grep sed zip unzip openssl
+            elif [ "${CURRENT_DISTRO}" == "freebsd" ]; then
+                pkg update
+                pkg install curl coreutils jq iproute2 lsof gawk procps grep sed zip unzip openssl
             fi
         fi
     else
-        echo "Error: ${DISTRO} not supported."
+        echo "Error: ${DISTRO} is not supported."
         exit
     fi
 }
@@ -109,7 +122,7 @@ usage "$@"
 
 # Skips all questions and just get a client conf after install.
 function headless-install() {
-    if { [ "${HEADLESS_INSTALL}" == "y" ] || [ "${HEADLESS_INSTALL}" == "Y" ]; }; then
+    if [[ ${HEADLESS_INSTALL} =~ ^[Yy]$ ]]; then
         PORT_CHOICE_SETTINGS=${IPV4_SUBNET_SETTINGS:-1}
         PASSWORD_CHOICE_SETTINGS=${IPV6_SUBNET_SETTINGS:-1}
         ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
@@ -128,6 +141,8 @@ SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-rust.service"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
+PASSWORD_CHOICE="$(openssl rand -base64 25)"
+MODE_CHOICE="tcp_only"
 
 # Shadowsocks Config
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
@@ -153,23 +168,6 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # Set the port number
     set-port
 
-    # Determine password
-    function shadowsocks-password() {
-        echo "Choose your password"
-        echo "   1) Random (Recommended)"
-        until [[ "${PASSWORD_CHOICE_SETTINGS}" =~ ^[1-1]$ ]]; do
-            read -rp "Password choice [1-1]: " -e -i 1 PASSWORD_CHOICE_SETTINGS
-        done
-        case ${PASSWORD_CHOICE_SETTINGS} in
-        1)
-            PASSWORD_CHOICE="$(openssl rand -base64 25)"
-            ;;
-        esac
-    }
-
-    # Password
-    shadowsocks-password
-
     # Determine Encryption
     function shadowsocks-encryption() {
         echo "Choose your Encryption"
@@ -194,33 +192,28 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # encryption
     shadowsocks-encryption
-
     # Get the IPv4
     function test-connectivity-v4() {
         echo "How would you like to detect IPv4?"
         echo "  1) Curl (Recommended)"
-        echo "  2) IP (Advanced)"
-        echo "  3) Custom (Advanced)"
-        until [[ "${SERVER_HOST_V4_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "IPv4 Choice [1-3]: " -e -i 1 SERVER_HOST_V4_SETTINGS
+        echo "  2) Custom (Advanced)"
+        until [[ "${SERVER_HOST_V4_SETTINGS}" =~ ^[1-2]$ ]]; do
+            read -rp "IPv4 Choice [1-2]:" -e -i 1 SERVER_HOST_V4_SETTINGS
         done
         case ${SERVER_HOST_V4_SETTINGS} in
         1)
             SERVER_HOST_V4="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
             if [ -z "${SERVER_HOST_V4}" ]; then
-                echo "Error: Curl unable to locate your server's public IP address."
+                SERVER_HOST_V4="$(curl -4 -s 'https://checkip.amazonaws.com')"
             fi
             ;;
         2)
-            SERVER_HOST_V4="$(ip route get 8.8.8.8 | grep src | sed 's/.*src \(.* \)/\1/g' | cut -f1 -d ' ')"
-            if [ -z "${SERVER_HOST_V4}" ]; then
-                echo "Error: IP unable to locate your server's public IP address."
-            fi
-            ;;
-        3)
-            read -rp "Custom IPv4: " -e -i "$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V4
+            read -rp "Custom IPv4:" SERVER_HOST_V4
             if [ -z "${SERVER_HOST_V4}" ]; then
                 SERVER_HOST_V4="$(curl -4 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
+            fi
+            if [ -z "${SERVER_HOST_V4}" ]; then
+                SERVER_HOST_V4="$(curl -4 -s 'https://checkip.amazonaws.com')"
             fi
             ;;
         esac
@@ -229,56 +222,35 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
     # Get the IPv4
     test-connectivity-v4
 
-    # Determine ipv6
+    # Determine IPv6
     function test-connectivity-v6() {
         echo "How would you like to detect IPv6?"
         echo "  1) Curl (Recommended)"
-        echo "  2) IP (Advanced)"
-        echo "  3) Custom (Advanced)"
-        until [[ "${SERVER_HOST_V6_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "IPv6 Choice [1-3]: " -e -i 1 SERVER_HOST_V6_SETTINGS
+        echo "  2) Custom (Advanced)"
+        until [[ "${SERVER_HOST_V6_SETTINGS}" =~ ^[1-2]$ ]]; do
+            read -rp "IPv6 Choice [1-2]:" -e -i 1 SERVER_HOST_V6_SETTINGS
         done
         case ${SERVER_HOST_V6_SETTINGS} in
         1)
             SERVER_HOST_V6="$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
             if [ -z "${SERVER_HOST_V6}" ]; then
-                echo "Error: Curl unable to locate your server's public IP address."
+                SERVER_HOST_V6="$(curl -6 -s 'https://checkip.amazonaws.com')"
             fi
             ;;
         2)
-            SERVER_HOST_V6="$(ip -6 addr | sed -ne 's|^.* inet6 \([^/]*\)/.* scope global.*$|\1|p' | head -1)"
-            if [ -z "${SERVER_HOST_V6}" ]; then
-                echo "Error: IP unable to locate your server's public IP address."
-            fi
-            ;;
-        3)
-            read -rp "Custom IPv6: " -e -i "$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')" SERVER_HOST_V6
+            read -rp "Custom IPv6:" SERVER_HOST_V6
             if [ -z "${SERVER_HOST_V6}" ]; then
                 SERVER_HOST_V6="$(curl -6 -s 'https://api.ipengine.dev' | jq -r '.network.ip')"
             fi
+            if [ -z "${SERVER_HOST_V6}" ]; then
+                SERVER_HOST_V6="$(curl -6 -s 'https://checkip.amazonaws.com')"
+            fi
             ;;
         esac
     }
 
-    # Set Port
+    # Get the IPv6
     test-connectivity-v6
-
-    # Determine TCP or UDP
-    function shadowsocks-mode() {
-        echo "Choose your method TCP"
-        echo "   1) TCP (Recommended)"
-        until [[ "${MODE_CHOICE_SETTINGS}" =~ ^[1-1]$ ]]; do
-            read -rp "Mode choice [1-1]: " -e -i 1 MODE_CHOICE_SETTINGS
-        done
-        case ${MODE_CHOICE_SETTINGS} in
-        1)
-            MODE_CHOICE="tcp_only"
-            ;;
-        esac
-    }
-
-    # Mode
-    shadowsocks-mode
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
@@ -286,7 +258,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             snap install core
             snap install --candidate shadowsocks-rust
         fi
-        if [ ! -f "/usr/bin/shadowsocks-rust.ssserver" ]; then
+        if [ ! -x "$(command -v shadowsocks-rust.ssserver)" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
     }
@@ -306,7 +278,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         fi
         # Install the service
         if [ ! -f "${SHADOWSOCKS_SERVICE_PATH}" ]; then
-        echo "[Unit]
+            echo "[Unit]
 Description=Shadowsocks-rust Server
 After=network.target
 
@@ -317,17 +289,9 @@ ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
         fi
-        if pgrep systemd-journal; then
-            systemctl daemon-reload
-            systemctl enable shadowsocks-rust
-            systemctl start shadowsocks-rust
-        else
+        if ! pgrep systemd-journal; then
             service shadowsocks-rust enable
             service shadowsocks-rust start
-        fi
-        # Fix the issue on raspbian
-        if [ "${DISTRO}" == "raspbian" ]; then
-            sed -i "s/\usr/#\/usr/" /etc/ld.so.preload
         fi
     }
 
@@ -395,19 +359,13 @@ else
             ;;
         5)
             if pgrep systemd-journal; then
-                systemctl stop shadowsocks-rust
                 systemctl disable shadowsocks-rust
+                systemctl stop shadowsocks-rust
             else
-                service shadowsocks-rust stop
                 service shadowsocks-rust disable
+                service shadowsocks-rust stop
             fi
-            if { [ "${DISTRO}" == "ubuntu" ] || [ "${DISTRO}" == "debian" ] || [ "${DISTRO}" == "raspbian" ] || [ "${DISTRO}" == "pop" ] || [ "${DISTRO}" == "kali" ] || [ "${DISTRO}" == "linuxmint" ]; }; then
-                snap remove --purge shadowsocks-rust -y
-                apt-get remove --purge snapd -y
-            elif { [ "${DISTRO}" == "centos" ] || [ "${DISTRO}" == "fedora" ] || [ "${DISTRO}" == "rhel" ]; }; then
-                snap remove --purge shadowsocks-rust -y
-                yum remove snapd -y
-            fi
+            # Todo: Complete uninstall.
             if [ -d "${SHADOWSOCKS_PATH}" ]; then
                 rm -rf "${SHADOWSOCKS_PATH}"
             fi
@@ -418,12 +376,7 @@ else
                 rm -f "${SHADOWSOCKS_SERVICE_PATH}"
             fi
             if [ -f "${SHADOWSOCKS_BACKUP_PATH}" ]; then
-                read -rp "Do you really want to remove ShadowSocks Backup? (y/n):" -e -i "y" REMOVE_SHADOWSOCKS_BACKUP
-                if { [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "y" ] || [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "Y" ]; }; then
-                    rm -f ${SHADOWSOCKS_BACKUP_PATH}
-                elif { [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "n" ] || [ "${REMOVE_SHADOWSOCKS_BACKUP}" = "N" ]; }; then
-                    exit
-                fi
+                rm -f ${SHADOWSOCKS_BACKUP_PATH}
             fi
             ;;
         6) # Update the script
