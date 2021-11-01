@@ -214,7 +214,7 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
         if [ "${CURRENT_DISTRO}" == "raspbian" ]; then
-            sed "s/\/usr\/lib\/arm-linux-gnueabihf\/libarmmem.so/#\/usr\/lib/arm-linux-gnueabihf\/libarmmem.so/g" /etc/ld.so.preload
+            sed -i "s/\usr/#\/usr/" /etc/ld.so.preload
         fi
     }
 
