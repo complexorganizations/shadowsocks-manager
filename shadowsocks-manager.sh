@@ -136,6 +136,7 @@ SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
 SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-rust.service"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
+SHADOWSOCKS_BIN_PATH="/snap/bin/shadowsocks-rust.ssserver"
 PASSWORD_CHOICE="$(openssl rand -base64 25)"
 MODE_CHOICE="tcp_only"
 SERVER_PORT="443"
@@ -206,12 +207,9 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
     # Install shadowsocks Server
     function install-shadowsocks-server() {
-        if [ ! -x "$(command -v snap run shadowsocks-rust.ssserver)" ]; then
+        if [ ! -f "${SHADOWSOCKS_BIN_PATH}" ]; then
             snap install core
             snap install shadowsocks-rust
-        fi
-        if [ ! -x "$(command -v shadowsocks-rust.ssserver)" ]; then
-            ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
         if [ "${CURRENT_DISTRO}" == "raspbian" ]; then
             sed -i "s/\usr/#\/usr/" /etc/ld.so.preload
@@ -239,7 +237,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
+ExecStart=/snap/bin/shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
 
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
