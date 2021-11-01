@@ -1,0 +1,14 @@
+name: Build the latest version
+on:
+  push:
+    paths:
+      - "**.sh"
+jobs:
+  build:
+    name: Build on ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the directory
+        uses: actions/checkout@v2
+      - name: Run the code to build shadowsocks.
+        run: sudo ./shadowsocks-manager.sh --install
