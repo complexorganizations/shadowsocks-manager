@@ -213,6 +213,9 @@ if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
         if [ ! -x "$(command -v shadowsocks-rust.ssserver)" ]; then
             ln -s /snap/bin/shadowsocks-rust.ssserver /usr/bin/shadowsocks-rust.ssserver
         fi
+        if [ "${CURRENT_DISTRO}" == "raspbian" ]; then
+            sed "s/\/usr\/lib\/arm-linux-gnueabihf\/libarmmem.so/#\/usr\/lib/arm-linux-gnueabihf\/libarmmem.so/g" /etc/ld.so.preload
+        fi
     }
 
     # Install shadowsocks Server
