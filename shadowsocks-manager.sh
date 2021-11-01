@@ -9,7 +9,7 @@ function super-user-check() {
     fi
 }
 
-# Check for root
+# Require script to be run as root
 super-user-check
 
 # Get the current system information
