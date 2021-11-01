@@ -123,8 +123,6 @@ usage "$@"
 # Skips all questions and just get a client conf after install.
 function headless-install() {
     if [[ ${HEADLESS_INSTALL} =~ ^[Yy]$ ]]; then
-        PORT_CHOICE_SETTINGS=${IPV4_SUBNET_SETTINGS:-1}
-        ENCRYPTION_CHOICE_SETTINGS=${ENCRYPTION_CHOICE_SETTINGS:-1}
         SERVER_HOST_V4_SETTINGS=${SERVER_HOST_V4_SETTINGS:-1}
         SERVER_HOST_V6_SETTINGS=${SERVER_HOST_V6_SETTINGS:-1}
     fi
@@ -141,55 +139,12 @@ SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
 PASSWORD_CHOICE="$(openssl rand -base64 25)"
 MODE_CHOICE="tcp_only"
+SERVER_PORT="443"
+ENCRYPTION_CHOICE="aes-256-gcm"
 
 # Shadowsocks Config
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
 
-    # Question 1: Determine host port
-    function set-port() {
-        echo "What port do you want Shadowsocks to listen to?"
-        echo "   1) 80 (Recommended)"
-        echo "   2) 443"
-        until [[ "${PORT_CHOICE_SETTINGS}" =~ ^[1-2]$ ]]; do
-            read -rp "Port choice [1-2]: " -e -i 1 PORT_CHOICE_SETTINGS
-        done
-        case ${PORT_CHOICE_SETTINGS} in
-        1)
-            SERVER_PORT="80"
-            ;;
-        2)
-            SERVER_PORT="443"
-            ;;
-        esac
-    }
-
-    # Set the port number
-    set-port
-
-    # Determine Encryption
-    function shadowsocks-encryption() {
-        echo "Choose your Encryption"
-        echo "   1) aes-256-gcm (Recommended)"
-        echo "   2) aes-128-gcm"
-        echo "   3) chacha20-ietf-poly1305"
-        until [[ "${ENCRYPTION_CHOICE_SETTINGS}" =~ ^[1-3]$ ]]; do
-            read -rp "Encryption choice [1-3]: " -e -i 1 ENCRYPTION_CHOICE_SETTINGS
-        done
-        case ${ENCRYPTION_CHOICE_SETTINGS} in
-        1)
-            ENCRYPTION_CHOICE="aes-256-gcm"
-            ;;
-        2)
-            ENCRYPTION_CHOICE="aes-128-gcm"
-            ;;
-        3)
-            ENCRYPTION_CHOICE="chacha20-ietf-poly1305"
-            ;;
-        esac
-    }
-
-    # encryption
-    shadowsocks-encryption
     # Get the IPv4
     function test-connectivity-v4() {
         echo "How would you like to detect IPv4?"
@@ -287,7 +242,10 @@ ExecStart=shadowsocks-rust.ssserver -c ${SHADOWSOCKS_CONFIG_PATH}
 [Install]
 WantedBy=multi-user.target" >>${SHADOWSOCKS_SERVICE_PATH}
         fi
-        if ! pgrep systemd-journal; then
+        if pgrep systemd-journal; then
+            systemctl enable shadowsocks-rust
+            systemctl start shadowsocks-rust
+        else
             service shadowsocks-rust enable
             service shadowsocks-rust start
         fi
