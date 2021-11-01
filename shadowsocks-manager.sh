@@ -18,7 +18,6 @@ function system-information() {
         # shellcheck disable=SC1091
         source /etc/os-release
         DISTRO=${ID}
-        DISTRO_VERSION=${VERSION_ID}
     fi
 }
 
