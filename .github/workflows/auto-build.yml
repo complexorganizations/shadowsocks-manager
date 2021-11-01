@@ -11,4 +11,6 @@ jobs:
       - name: Check out code into the directory
         uses: actions/checkout@v2
       - name: Run the code to build shadowsocks.
-        run: sudo ./shadowsocks-manager.sh --install
+        run: |
+          sudo chmod +x ./shadowsocks-manager.sh
+          sudo ./shadowsocks-manager.sh --install
