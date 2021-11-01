@@ -19,7 +19,6 @@ function system-information() {
         source /etc/os-release
         DISTRO=${ID}
         DISTRO_VERSION=${VERSION_ID}
-        DISTRO_KERNEL_VERSION=$(uname -r | cut -d'.' -f1-2)
     fi
 }
 
