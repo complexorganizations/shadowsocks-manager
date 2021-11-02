@@ -27,16 +27,16 @@ system-information
 # Pre-Checks system requirements
 function installing-system-requirements() {
     if { [ "${CURRENT_DISTRO}" == "ubuntu" ] || [ "${CURRENT_DISTRO}" == "debian" ] || [ "${CURRENT_DISTRO}" == "raspbian" ] || [ "${CURRENT_DISTRO}" == "pop" ] || [ "${CURRENT_DISTRO}" == "kali" ] || [ "${CURRENT_DISTRO}" == "linuxmint" ] || [ "${CURRENT_DISTRO}" == "neon" ] || [ "${CURRENT_DISTRO}" == "fedora" ] || [ "${CURRENT_DISTRO}" == "centos" ] || [ "${CURRENT_DISTRO}" == "rhel" ] || [ "${CURRENT_DISTRO}" == "almalinux" ] || [ "${CURRENT_DISTRO}" == "rocky" ] || [ "${CURRENT_DISTRO}" == "arch" ] || [ "${CURRENT_DISTRO}" == "archarm" ] || [ "${CURRENT_DISTRO}" == "manjaro" ]; }; then
-        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v cut)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v lsof)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v pgrep)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v openssl)" ] || [ ! -x "$(command -v snap)" ]; }; then
+        if { [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v cut)" ] || [ ! -x "$(command -v jq)" ] || [ ! -x "$(command -v ip)" ] || [ ! -x "$(command -v lsof)" ] || [ ! -x "$(command -v awk)" ] || [ ! -x "$(command -v pgrep)" ] || [ ! -x "$(command -v grep)" ] || [ ! -x "$(command -v sed)" ] || [ ! -x "$(command -v zip)" ] || [ ! -x "$(command -v unzip)" ] || [ ! -x "$(command -v openssl)" ]; }; then
             if { [ "${CURRENT_DISTRO}" == "ubuntu" ] || [ "${CURRENT_DISTRO}" == "debian" ] || [ "${CURRENT_DISTRO}" == "raspbian" ] || [ "${CURRENT_DISTRO}" == "pop" ] || [ "${CURRENT_DISTRO}" == "kali" ] || [ "${CURRENT_DISTRO}" == "linuxmint" ] || [ "${CURRENT_DISTRO}" == "neon" ]; }; then
                 apt-get update
-                apt-get install curl coreutils jq iproute2 lsof gawk procps grep sed zip unzip openssl snapd -y
+                apt-get install curl coreutils jq iproute2 lsof gawk procps grep sed zip unzip openssl -y
             elif { [ "${CURRENT_DISTRO}" == "fedora" ] || [ "${CURRENT_DISTRO}" == "centos" ] || [ "${CURRENT_DISTRO}" == "rhel" ] || [ "${CURRENT_DISTRO}" == "almalinux" ] || [ "${CURRENT_DISTRO}" == "rocky" ]; }; then
                 yum update
                 yum install epel-release -y
-                yum install curl coreutils jq iproute2 lsof gawk procps-ng grep sed zip unzip openssl snapd -y
+                yum install curl coreutils jq iproute2 lsof gawk procps-ng grep sed zip unzip openssl -y
             elif { [ "${CURRENT_DISTRO}" == "arch" ] || [ "${CURRENT_DISTRO}" == "archarm" ] || [ "${CURRENT_DISTRO}" == "manjaro" ]; }; then
-                pacman -Syu --noconfirm --needed curl coreutils jq iproute2 lsof gawk procps-ng grep sed zip unzip openssl snapd
+                pacman -Syu --noconfirm --needed curl coreutils jq iproute2 lsof gawk procps-ng grep sed zip unzip openssl
             fi
         fi
     else
@@ -124,16 +124,19 @@ function headless-install() {
 headless-install
 
 # Global variable
-SHADOWSOCKS_PATH="/var/snap/shadowsocks-rust/common/etc/shadowsocks-rust"
+SHADOWSOCKS_PATH="/etc/shadowsocks"
 SHADOWSOCKS_CONFIG_PATH="${SHADOWSOCKS_PATH}/config.json"
-SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks-rust.service"
+SHADOWSOCKS_BIN_PATH="${SHADOWSOCKS_PATH}/ssserver"
+SHADOWSOCKS_SERVICE_PATH="/etc/systemd/system/shadowsocks.service"
 SHADOWSOCKS_MANAGER_URL="https://raw.githubusercontent.com/complexorganizations/shadowsocks-manager/main/shadowsocks-manager.sh"
 SHADOWSOCKS_BACKUP_PATH="/var/backups/shadowsocks-manager.zip"
-SHADOWSOCKS_BIN_PATH="/snap/bin/shadowsocks-rust.ssserver"
 PASSWORD_CHOICE="$(openssl rand -base64 25)"
 MODE_CHOICE="tcp_only"
 SERVER_PORT="443"
 ENCRYPTION_CHOICE="aes-256-gcm"
+LATEST_SHADOWSOCKS_VERSION=$(curl https://api.github.com/repos/shadowsocks/shadowsocks-rust/releases/latest | jq -r '.tag_name')
+CURRENT_SHADOWSOCKS_VERSION=$(cat ${SHADOWSOCKS_PATH}/version)
+SHADOWSOCKS_DOWNLOAD_URL=$(curl https://github.com/shadowsocks/shadowsocks-rust/releases/download/${LATEST_SHADOWSOCKS_VERSION}/shadowsocks-${LATEST_SHADOWSOCKS_VERSION}_linux_${CHECK_ARCHITECTURE}.tar.xz)
 
 # Shadowsocks Config
 if [ ! -f "${SHADOWSOCKS_CONFIG_PATH}" ]; then
