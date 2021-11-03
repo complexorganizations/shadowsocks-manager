@@ -1,8 +1,8 @@
 ### Shadowsocks Manager
 
-We strongly recommend that you use [WireGuard](https://github.com/complexorganizations/wireguard-manager) instead of Shadowsocks, but your best option is Shadowsocks if wireguard is blocked.
+### Deprecated: Shadowsocks has been deprecated in favor of outline because its experience isn't as unified as WireGuard's.
 
-[Outline](https://getoutline.org/) is also suggested.
+We strongly recommend that you use [WireGuard](https://github.com/complexorganizations/wireguard-manager) instead of Shadowsocks, but your best option is [Outline](https://getoutline.org/) if wireguard is blocked.
 
 ---
 ### Installation
